@@ -3,3 +3,4 @@ Dockerfile
 dev-docker-build.sh
 .idea
 /vendor/
+.env
