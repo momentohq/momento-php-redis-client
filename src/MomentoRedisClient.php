@@ -2,53 +2,34 @@
 
 namespace Momento\Cache;
 
-use Exception;
-use Momento\Auth\EnvMomentoTokenProvider;
-use Momento\Cache\Errors\InvalidArgumentError;
-use Momento\Config\Configurations\Laptop;
-
 class MomentoRedisClient
 {
-    protected CacheClient $client;
+    protected ICacheClient $cacheClient;
     protected string $cacheName;
 
-    /**
-     * @throws InvalidArgumentError
-     */
-    public function __construct(string $cacheName, int $defaultTtl)
+    public function __construct(ICacheClient $cacheClient, string $cacheName)
     {
-        $authProvider = new EnvMomentoTokenProvider
-        ('MOMENTO_API_KEY');
-        $configuration = Laptop::latest();
-        $this->client = new CacheClient($configuration, $authProvider, $defaultTtl);
+        $this->cacheClient = $cacheClient;
         $this->cacheName = $cacheName;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function set(string $key, string $value, int $ttlSeconds = null)
+    public function set(string $key, string $value, int $ttlSeconds = null): bool
     {
-        $response = $this->client->set($this->cacheName, $key, $value, $ttlSeconds);
-        if ($response->asSuccess()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->cacheClient->set($this->cacheName, $key, $value, $ttlSeconds);
     }
 
-    /**
-     * @throws Exception
-     */
-    public function get(string $key)
+    public function get(string $key): string|bool
     {
-        $response = $this->client->get($this->cacheName, $key);
-        if ($response->asHit()) {
-            return $response->asHit()->valueString();
-        } elseif ($response->asMiss()) {
-            return false;
-        } else {
-            return false;
-        }
+        return $this->cacheClient->get($this->cacheName, $key);
+    }
+
+    public function flushDB()
+    {
+        return $this->cacheClient->flushDB();
+    }
+
+    public function close()
+    {
+        return $this->cacheClient->close();
     }
 }

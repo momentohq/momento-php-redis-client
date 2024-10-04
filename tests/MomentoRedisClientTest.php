@@ -6,18 +6,14 @@ use PHPUnit\Framework\TestCase;
 
 class MomentoRedisClientTest extends TestCase
 {
-    private static Redis|MomentoRedisClient $client;
+    private static MomentoRedisClient $client;
 
     /**
      * Setup cache client before each class.
      */
     public static function setUpBeforeClass(): void
     {
-        try {
-            SetupIntegrationTest::setupIntegrationTest();
-        } catch (InvalidArgumentError|RedisException $e) {
-            error_log("Unexpected error occurred while setting up integration tests.");
-        }
+        SetupIntegrationTest::setupIntegrationTest();
         self::$client = SetupIntegrationTest::getClient();
     }
 
@@ -39,7 +35,6 @@ class MomentoRedisClientTest extends TestCase
 
     /**
      * Test getting a non-existent key.
-     * @throws RedisException
      */
     public function testGetNonExistentKey(): void
     {
