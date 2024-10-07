@@ -2,34 +2,29 @@
 
 namespace Momento\Cache;
 
+use Redis;
+
 class MomentoRedisClient
 {
     protected ICacheClient $cacheClient;
-    protected string $cacheName;
 
-    public function __construct(ICacheClient $cacheClient, string $cacheName)
+    public function __construct(ICacheClient $cacheClient)
     {
         $this->cacheClient = $cacheClient;
-        $this->cacheName = $cacheName;
     }
 
     public function set(string $key, string $value, int $ttlSeconds = null): bool
     {
-        return $this->cacheClient->set($this->cacheName, $key, $value, $ttlSeconds);
+        return $this->cacheClient->set($key, $value, $ttlSeconds);
     }
 
     public function get(string $key): string|bool
     {
-        return $this->cacheClient->get($this->cacheName, $key);
+        return $this->cacheClient->get($key);
     }
 
-    public function flushDB()
+    public function flushDB(): bool|Redis
     {
         return $this->cacheClient->flushDB();
-    }
-
-    public function close()
-    {
-        return $this->cacheClient->close();
     }
 }

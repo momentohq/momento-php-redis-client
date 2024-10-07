@@ -14,8 +14,8 @@ $dotenv->load();
 
 class SetupIntegrationTest
 {
-    protected static MomentoRedisClient $redisClient;
-    protected static MomentoRedisClient $momentoClient;
+    protected static MomentoRedisClient|null $redisClient;
+    protected static MomentoRedisClient|null $momentoClient;
     protected static string $cacheName;
 
     /**
@@ -49,7 +49,7 @@ class SetupIntegrationTest
         $redisHost = $_ENV['REDIS_HOST'] ?: 'localhost';
         $redisPort = $_ENV['REDIS_PORT'] ?: 6379;
         $redis->connect($redisHost, $redisPort);
-        return new MomentoRedisClient(new RedisClient($redis), self::$cacheName);
+        return new MomentoRedisClient(new RedisClient($redis));
     }
 
     /**
@@ -63,7 +63,7 @@ class SetupIntegrationTest
         $authProvider = new EnvMomentoTokenProvider('MOMENTO_API_KEY');
         $momentoClient = new CacheClient($configurations, $authProvider, $ttl);
         self::createCacheIfNotExists($momentoClient);
-        return new MomentoRedisClient(new MomentoCacheClient(self::$cacheName, $ttl), self::$cacheName);
+        return new MomentoRedisClient(new MomentoCacheClient($momentoClient, self::$cacheName));
     }
 
     /**
@@ -105,7 +105,7 @@ class SetupIntegrationTest
     {
         if (self::isRedisBackedTest()) {
             self::$redisClient->flushDB();
-            self::$redisClient->close();
+            self::$redisClient = null;
         } else {
             $configurations = Laptop::latest();
             $authProvider = new EnvMomentoTokenProvider('MOMENTO_API_KEY');
@@ -116,6 +116,7 @@ class SetupIntegrationTest
             } elseif ($result->asError()) {
                 error_log("Error deleting cache '" . self::$cacheName . "': " . $result->asError()->message());
             }
+            self::$momentoClient = null;
         }
     }
 }
