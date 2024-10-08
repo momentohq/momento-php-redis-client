@@ -1,12 +1,13 @@
 <?php
 
 use Momento\Cache\Errors\InvalidArgumentError;
-use Momento\Cache\MomentoRedisClient;
+use Momento\Cache\Errors\NotImplementedException;
+use Momento\Cache\MomentoCacheClient;
 use PHPUnit\Framework\TestCase;
 
 class MomentoRedisClientTest extends TestCase
 {
-    private static MomentoRedisClient $client;
+    private static Redis $client;
 
     /**
      * Setup cache client before each class.
@@ -18,8 +19,7 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
-     * Test setting and getting a key-value pair.
-     * @throws Exception
+     * @throws RedisException
      */
     public function testSetAndGetKeyValue(): void
     {
@@ -34,7 +34,7 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
-     * Test getting a non-existent key.
+     * @throws RedisException
      */
     public function testGetNonExistentKey(): void
     {
@@ -45,8 +45,22 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testNotImplementedMethodException(): void
+    {
+        if (!self::$client instanceof MomentoCacheClient) {
+            $this->markTestSkipped("This test is only for Momento client");
+        }
+        $key = 'test_key';
+        $value = 'test_value';
+        $this->expectException(NotImplementedException::class);
+        self::$client->append($key, $value);
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
-     * @throws InvalidArgumentError
+     * @throws InvalidArgumentError | RedisException
      */
     public static function tearDownAfterClass(): void
     {

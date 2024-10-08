@@ -4,4 +4,4 @@ set -e
 set -x
 set -o pipefail
 
-docker build --tag momento-php-dev .
+docker build --tag momento-php-redis-dev .

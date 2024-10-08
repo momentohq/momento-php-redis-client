@@ -1,11 +1,21 @@
-FROM php:8.1.12-cli
+FROM php:8.3-cli-alpine
 
-RUN apt-get update && apt-get install -y -q git rake ruby-ronn zlib1g-dev libtool make gcc && apt-get clean
-
-RUN cd /usr/local/bin && curl -sS https://getcomposer.org/installer | php
-RUN cd /usr/local/bin && mv composer.phar composer
-RUN pecl install grpc
-RUN pecl install protobuf
-RUN docker-php-ext-enable grpc
-RUN docker-php-ext-enable protobuf
-RUN pecl install redis && docker-php-ext-enable redis
+RUN apk update && \
+    apk add --no-cache \
+        git \
+        ruby \
+        ruby-dev \
+        build-base \
+        zlib-dev \
+        libtool \
+        make \
+        gcc \
+        bash \
+        autoconf \
+        linux-headers && \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    # Install PHP extensions
+    pecl install grpc && \
+    pecl install protobuf && \
+    pecl install redis && \
+    docker-php-ext-enable grpc protobuf redis
