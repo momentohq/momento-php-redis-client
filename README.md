@@ -9,8 +9,8 @@ Additionally, create a .env file at the root of the project with the following c
 
 ```bash
 TEST_REDIS=true # false if you would like to use momento
-REDIS_HOST="127.0.0.1" # Redis host
-REDIS_PORT=6379 # Redis port
+REDIS_HOST=<REDIS_HOST> # Redis host, default is "127.0.0.1"
+REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
 TEST_CACHE_NAME="test-cache" # Cache name
 ```
 
@@ -45,11 +45,12 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-r
 - Run the Docker container for integration tests:
 
 ```bash
-docker run -it -v $(pwd):/app -w /app momento-php-dev /bin/bash
+docker run -it -v $(pwd):/app -w /app momento-php-redis-dev /bin/bash
 ```
 
 - Inside the Docker container, execute the integration tests:
     
 ```bash
-./vendor/bin/phpunit tests/MomentoRedisClientTest.php
+composer install
+composer test
 ```
