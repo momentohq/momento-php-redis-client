@@ -6,6 +6,8 @@ use Momento\Cache\CacheClient;
 use Momento\Cache\Errors\InvalidArgumentError;
 use Momento\Cache\MomentoCacheClient;
 use Momento\Config\Configurations\Laptop;
+use Psr\Log\LoggerInterface;
+use Momento\Logging\StderrLoggerFactory;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -14,6 +16,7 @@ class SetupIntegrationTest
 {
     protected static Redis $client;
     protected static string $cacheName;
+    protected static LoggerInterface $logger;
 
     /**
      * Set up the client based on the environment. This will run once before all tests.
@@ -22,13 +25,11 @@ class SetupIntegrationTest
      */
     public static function setupIntegrationTest(): void
     {
-
         self::$cacheName = self::getTestCacheName();
+        self::$logger = (new StderrLoggerFactory())->getLogger("integration-test");
         if (self::isRedisBackedTest()) {
-            var_dump("Setting up redis client");
             self::$client = self::setupRedisClient();
         } else {
-            var_dump("Setting up momento client");
             self::$client = self::setupMomentoClient();
         }
     }
@@ -58,9 +59,9 @@ class SetupIntegrationTest
     private static function setupMomentoClient(): Redis
     {
         $ttl = 60;
-        $configurations = Laptop::latest();
+        $configuration = Laptop::latest(new StderrLoggerFactory());
         $authProvider = new EnvMomentoTokenProvider('MOMENTO_API_KEY');
-        $momentoClient = new CacheClient($configurations, $authProvider, $ttl);
+        $momentoClient = new CacheClient($configuration, $authProvider, $ttl);
         self::createCacheIfNotExists($momentoClient);
         return new MomentoCacheClient($momentoClient, self::$cacheName);
     }
@@ -73,11 +74,11 @@ class SetupIntegrationTest
         $result = $client->createCache($cacheName);
 
         if ($result->asSuccess()) {
-            error_log("Cache '$cacheName' created successfully.");
+            self::$logger->info("Cache '$cacheName' created successfully.");
         } elseif ($result->asAlreadyExists()) {
-            error_log("Cache '$cacheName' already exists.");
+            self::$logger->info("Cache '$cacheName' already exists.");
         } elseif ($result->asError()) {
-            error_log("Error creating cache '$cacheName': " . $result->asError()->message());
+            self::$logger->error("Error creating cache '$cacheName': " . $result->asError()->message());
             throw new RuntimeException("Error creating cache '$cacheName': " . $result->asError()->message());
         }
     }
@@ -106,14 +107,15 @@ class SetupIntegrationTest
             self::$client->flushDB();
             self::$client->close();
         } else {
-            $configurations = Laptop::latest();
+            $configuration = Laptop::latest();
             $authProvider = new EnvMomentoTokenProvider('MOMENTO_API_KEY');
-            $momentoClient = new CacheClient($configurations, $authProvider, 60);
+            $momentoClient = new CacheClient($configuration, $authProvider, 60);
+            $logger = $configuration->getLoggerFactory()->getLogger("integration-test");
             $result = $momentoClient->deleteCache(self::$cacheName);
             if ($result->asSuccess()) {
-                error_log("Cache '" . self::$cacheName . "' deleted successfully.");
+                self::$logger->info("Cache '" . self::$cacheName . "' deleted successfully.");
             } elseif ($result->asError()) {
-                error_log("Error deleting cache '" . self::$cacheName . "': " . $result->asError()->message());
+                self::$logger->error("Error deleting cache '" . self::$cacheName . "': " . $result->asError()->message());
             }
         }
     }

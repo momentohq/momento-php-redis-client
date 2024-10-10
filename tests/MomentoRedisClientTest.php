@@ -23,8 +23,8 @@ class MomentoRedisClientTest extends TestCase
      */
     public function testSetAndGetKeyValue(): void
     {
-        $key = 'test_key';
-        $value = 'test_value';
+        $key = uniqid();
+        $value = uniqid();
 
         $result = self::$client->set($key, $value);
         $this->assertTrue($result, "Failed to set the key-value pair");
@@ -52,8 +52,8 @@ class MomentoRedisClientTest extends TestCase
         if (!self::$client instanceof MomentoCacheClient) {
             $this->markTestSkipped("This test is only for Momento client");
         }
-        $key = 'test_key';
-        $value = 'test_value';
+        $key = uniqid();
+        $value = uniqid();
         $this->expectException(NotImplementedException::class);
         self::$client->append($key, $value);
     }
