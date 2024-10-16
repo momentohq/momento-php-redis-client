@@ -28,7 +28,7 @@ class MomentoRedisClientTest extends TestCase
         $value = uniqid();
 
         $result = self::$client->set($key, $value);
-        $this->assertTrue($result, "Failed to set the key-value pair");
+        $this->assertEquals('OK', $result, "Failed to set the key-value pair");
 
         $retrievedValue = self::$client->get($key);
         $this->assertEquals($value, $retrievedValue, "Retrieved value does not match the set value");
@@ -42,7 +42,7 @@ class MomentoRedisClientTest extends TestCase
         $key = 'non_existent_key';
 
         $retrievedValue = self::$client->get($key);
-        $this->assertFalse($retrievedValue, "Expected null for a non-existent key");
+        $this->assertFalse($retrievedValue, "Expected false for a non-existent key");
     }
 
     /**
@@ -60,17 +60,21 @@ class MomentoRedisClientTest extends TestCase
         $deletedKeys = self::$client->del($keys[0], $keys[1], $keys[2]);
         $this->assertEquals(3, $deletedKeys, "Failed to delete the keys");
 
+        $nonExistentKey = uniqid();
+        $deletedKey = self::$client->del($nonExistentKey);
+        $this->assertEquals(0, $deletedKey, "Expected 0 for a non-existent key");
+
         $retrievedValues = [];
         for ($i = 0; $i < 3; $i++) {
             $retrievedValues[] = self::$client->get($keys[$i]);
-            $this->assertFalse($retrievedValues[$i], "Expected null for a deleted key");
+            $this->assertFalse($retrievedValues[$i], "Expected false for a deleted key");
         }
     }
 
     /**
      * @throws RedisException
      */
-    public function testIncrementKey(): void
+    public function testIncrementIntegerKey(): void
     {
         $key = uniqid();
         $value = 1;
@@ -84,7 +88,21 @@ class MomentoRedisClientTest extends TestCase
     /**
      * @throws RedisException
      */
-    public function testGetSetWithEX(): void
+    public function testIncrementStringKey(): void
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $incrAmount = 5;
+        self::$client->set($key, $value);
+
+        $incrResult = self::$client->incrBy($key, $incrAmount);
+        $this->assertFalse($incrResult, "Expected false for incrementing a non-integer key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testGetSetWithEx(): void
     {
         $key = uniqid();
         $value = uniqid();
@@ -96,13 +114,13 @@ class MomentoRedisClientTest extends TestCase
 
         sleep(5);
         $expiredValue = self::$client->get($key);
-        $this->assertFalse($expiredValue, "Expected null for an expired key");
+        $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
 
     /**
      * @throws RedisException
      */
-    public function testGetSetWithPX(): void
+    public function testGetSetWithPx(): void
     {
         $key = uniqid();
         $value = uniqid();
@@ -114,13 +132,13 @@ class MomentoRedisClientTest extends TestCase
 
         sleep(5);
         $expiredValue = self::$client->get($key);
-        $this->assertFalse($expiredValue, "Expected null for an expired key");
+        $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
 
     /**
      * @throws RedisException
      */
-    public function testGetSetWithEXAT(): void
+    public function testGetSetWithExat(): void
     {
         $key = uniqid();
         $value = uniqid();
@@ -132,13 +150,13 @@ class MomentoRedisClientTest extends TestCase
 
         sleep(5);
         $expiredValue = self::$client->get($key);
-        $this->assertFalse($expiredValue, "Expected null for an expired key");
+        $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
 
     /**
      * @throws RedisException
      */
-    public function testGetSetWithPXAT(): void
+    public function testGetSetWithPxat(): void
     {
         $key = uniqid();
         $value = uniqid();
@@ -150,7 +168,7 @@ class MomentoRedisClientTest extends TestCase
 
         sleep(5);
         $expiredValue = self::$client->get($key);
-        $this->assertFalse($expiredValue, "Expected null for an expired key");
+        $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
 
     /**
@@ -257,6 +275,34 @@ class MomentoRedisClientTest extends TestCase
 
         $setResult = self::$client->set($key, $value, ['xx']);
         $this->assertFalse($setResult, "Expected false when key does not exist for XX");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testSetNxWhenKeyExists(): void
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $setResult = self::$client->set($key, $value);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $setResult1 = self::$client->setnx($key, $value);
+        $this->assertFalse($setResult1, "Expected false for an existing key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testSetNxWhenKeyDoesNotExist(): void
+    {
+        $key = uniqid();
+        $value = uniqid();
+
+        $setResult = self::$client->setnx($key, $value);
+        $this->assertEquals('OK', $setResult, "Expected OK for non-existing key");
+        $getResult = self::$client->get($key);
+        $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
     }
 
     /**

@@ -324,10 +324,12 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         }
         $deletedKeys = 0;
         foreach ($keys as $key) {
-            $result = $this->client->delete($this->cacheName, $key);
-
-            if ($result->asSuccess()) {
-                $deletedKeys++;
+            $getResult = $this->client->get($this->cacheName, $key);
+            if ($getResult->asHit()) {
+                $deleteResult = $this->client->delete($this->cacheName, $key);
+                if ($deleteResult->asSuccess()) {
+                    $deletedKeys++;
+                }
             }
         }
         return $deletedKeys;
@@ -869,7 +871,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->value();
         } else {
-            return false;
+            return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
         }
     }
 
@@ -1492,8 +1494,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    logger()->error('Unexpected result from setnx', ['result' => $result]);
-                    return false;
+                    return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
                 }
             }
 
@@ -1505,8 +1506,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    logger()->error('Unexpected result from setxx', ['result' => $result]);
-                    return false;
+                    return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
                 }
             }
 
@@ -1568,10 +1568,8 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asNotStored()) {
             return false;
         } else {
-            logger()->error('Unexpected result from setnx', ['result' => $result]);
-            return false;
+            return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
         }
-
     }
 
     /**
