@@ -5,6 +5,7 @@ namespace Momento\Cache;
 use Exception;
 use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
 use Redis;
+use TypeError;
 
 class MomentoCacheClient extends Redis implements IMomentoRedisClient
 {
@@ -313,12 +314,23 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
-    /**
-     * @throws Exception
-     */
+
     public function del(array|string $key, string ...$other_keys): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        if (is_array($key)) {
+            $keys = $key;
+        } else {
+            $keys = array_merge([$key], $other_keys);
+        }
+        $deletedKeys = 0;
+        foreach ($keys as $key) {
+            $result = $this->client->delete($this->cacheName, $key);
+
+            if ($result->asSuccess()) {
+                $deletedKeys++;
+            }
+        }
+        return $deletedKeys;
     }
 
     /**
@@ -851,12 +863,14 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
-    /**
-     * @throws Exception
-     */
     public function incrBy(string $key, int $value): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $result = $this->client->increment($this->cacheName, $key, $value);
+        if ($result->asSuccess()) {
+            return $result->asSuccess()->value();
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -1443,11 +1457,69 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
+    /**
+     * @throws Exception
+     */
     public function set(string $key, mixed $value, mixed $options = null): Redis|string|bool
     {
-        $result = $this->client->set($this->cacheName, $key, $value, $options);
+        if (is_numeric($value)) {
+            $value = (string)$value;
+        }
+
+        $ttl = null;
+
+        if (is_array($options)) {
+            $options = array_change_key_case($options, CASE_LOWER);
+
+            // Handle different TTL options (EX, PX, EXAT, PXAT)
+            if (isset($options['ex'])) {
+                $ttl = $options['ex'];
+            } elseif (isset($options['px'])) {
+                $ttl = $options['px'] / 1000;
+            } elseif (isset($options['exat'])) {
+                $ttl = $options['exat'] - time();
+            } elseif (isset($options['pxat'])) {
+                $ttl = floor(($options['pxat'] - microtime(true) * 1000) / 1000);
+            } elseif (isset($options['keepttl'])) {
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException('set', 'keepttl');
+            }
+
+            // Handle NX option: Set if the key does not exist
+            if (in_array('nx', $options, true)) {
+                $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
+                if ($result->asStored()) {
+                    return "OK";
+                } else if ($result->asNotStored()) {
+                    return false;
+                } else {
+                    logger()->error('Unexpected result from setnx', ['result' => $result]);
+                    return false;
+                }
+            }
+
+            // Handle XX option: Set only if the key already exists
+            if (in_array('xx', $options, true)) {
+                $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
+                if ($result->asStored()) {
+                    return "OK";
+                } else if ($result->asNotStored()) {
+                    return false;
+                } else {
+                    logger()->error('Unexpected result from setxx', ['result' => $result]);
+                    return false;
+                }
+            }
+
+            // Handle GET option: Return the previous value and set the new value
+            if (in_array('get', $options, true)) {
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException('set', 'get');
+            }
+        }
+
+        // Execute the set command on the cache with the provided TTL
+        $result = $this->client->set($this->cacheName, $key, $value, $ttl);
         if ($result->asSuccess()) {
-            return true;
+            return 'OK';
         } else {
             return false;
         }
@@ -1490,7 +1562,16 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function setnx(string $key, mixed $value): Redis|bool
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $result = $this->client->setIfAbsent($this->cacheName, $key, $value);
+        if ($result->asStored()) {
+            return true;
+        } else if ($result->asNotStored()) {
+            return false;
+        } else {
+            logger()->error('Unexpected result from setnx', ['result' => $result]);
+            return false;
+        }
+
     }
 
     /**
