@@ -1,0 +1,129 @@
+name: On Pull Request
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      php-version: 8.4
+      extensions: grpc, protobuf
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Commitlint and Other Shared Build Steps
+        uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set cache key
+        id: cache-key
+        run: echo "key=php-${{ env.php-version }}" >> $GITHUB_OUTPUT
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: ${{ env.php-version }}
+          extensions: ${{ env.extensions }}
+          key: ${{ steps.cache-key.outputs.key }}
+
+      - name: Cache extensions
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.php-version }}
+          extensions: ${{ env.extensions }}
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Check CS (Code Style)
+        run: composer lint
+
+  test-momento:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [8.4]
+    env:
+      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      TEST_REDIS: false
+      extensions: grpc, protobuf
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set cache key
+        id: cache-key
+        run: echo "key=php-${{ matrix.php-version }}" >> $GITHUB_OUTPUT
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: ${{ env.extensions }}
+          key: ${{ steps.cache-key.outputs.key }}
+
+      - name: Cache extensions
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: ${{ env.extensions }}
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Run tests using Momento backend
+        run: composer test
+
+  test-redis:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        php-version: [8.4]
+    env:
+      TEST_REDIS: true
+      extensions: grpc, protobuf
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: ${{ env.extensions }}
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Run tests using Redis backend
+        run: composer test

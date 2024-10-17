@@ -9,9 +9,6 @@ use Momento\Config\Configurations\Laptop;
 use Psr\Log\LoggerInterface;
 use Momento\Logging\StderrLoggerFactory;
 
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
-
 class SetupIntegrationTest
 {
     protected static Redis $client;
@@ -36,7 +33,7 @@ class SetupIntegrationTest
 
     private static function isRedisBackedTest(): bool
     {
-        return $_ENV['TEST_REDIS'] === 'true';
+        return getenv('TEST_REDIS') === 'true';
     }
 
     /**
@@ -46,8 +43,8 @@ class SetupIntegrationTest
     private static function setupRedisClient(): Redis
     {
         $redis = new Redis();
-        $redisHost = $_ENV['REDIS_HOST'] ?: 'localhost';
-        $redisPort = $_ENV['REDIS_PORT'] ?: 6379;
+        $redisHost = getenv('REDIS_HOST') ?: 'localhost';
+        $redisPort = getenv('REDIS_PORT') ?: 6379;
         $redis->connect($redisHost, $redisPort);
         return $redis;
     }
@@ -85,7 +82,7 @@ class SetupIntegrationTest
 
     private static function getTestCacheName(): string
     {
-        $cacheName = $_ENV['TEST_CACHE_NAME'] ?: 'php-integration-test-default';
+        $cacheName = getenv('TEST_CACHE_NAME') ?: 'php-integration-test-default';
         return $cacheName . uniqid();
     }
 
