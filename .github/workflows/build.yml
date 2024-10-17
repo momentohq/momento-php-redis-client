@@ -52,29 +52,32 @@ jobs:
       - name: Check CS (Code Style)
         run: composer lint
 
-  test-momento:
+  test:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
     strategy:
       matrix:
+        backend: [momento, redis]
         php-version: [8.4]
-    env:
-      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-      TEST_REDIS: false
-      extensions: grpc, protobuf
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set cache key
         id: cache-key
-        run: echo "key=php-${{ matrix.php-version }}" >> $GITHUB_OUTPUT
+        run: echo "key=php-${{ matrix.php-version }}-backend-${{ matrix.backend }}" >> $GITHUB_OUTPUT
 
       - name: Setup cache environment
         id: extcache
         uses: shivammathur/cache-extensions@v1
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: ${{ env.extensions }}
+          extensions: grpc, protobuf
           key: ${{ steps.cache-key.outputs.key }}
 
       - name: Cache extensions
@@ -88,42 +91,20 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: ${{ env.extensions }}
+          extensions: grpc, protobuf
           tools: composer
 
       - name: Install dependencies
         run: composer install
 
-      - name: Run tests using Momento backend
-        run: composer test
+      - name: Set TEST_REDIS variable dynamically
+        run: echo "TEST_REDIS=$([ '${{ matrix.backend }}' == 'redis' ] && echo true || echo false)" >> $GITHUB_ENV
 
-  test-redis:
-    runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-
-    strategy:
-      matrix:
-        php-version: [8.4]
-    env:
-      TEST_REDIS: true
-      extensions: grpc, protobuf
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: ${{ env.extensions }}
-          tools: composer
-
-      - name: Install dependencies
-        run: composer install
-
-      - name: Run tests using Redis backend
-        run: composer test
+      - name: Run tests based on backend
+        run: |
+          if [ "${{ matrix.backend }}" = "momento" ]; then
+            echo "Running tests with Momento backend"
+            composer test -- --group momento
+          else
+            echo "Running tests with Redis backend"
+            composer test -- --group redis
