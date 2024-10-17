@@ -33,7 +33,7 @@ class SetupIntegrationTest
         }
     }
 
-    private static function isRedisBackedTest(): bool
+    public static function isRedisBackedTest(): bool
     {
         return getenv('TEST_REDIS') === 'true';
     }

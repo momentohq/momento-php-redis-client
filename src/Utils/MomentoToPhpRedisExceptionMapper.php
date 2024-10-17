@@ -12,7 +12,7 @@ class MomentoToPhpRedisExceptionMapper
     /**
      * @throws RedisException
      */
-    public static function mapException($error): bool|RedisException
+    public static function mapExceptionElseReturnFalse($error): bool|RedisException
     {
         $sdkError = $error->asError()->innerException();
         return match (get_class($sdkError)) {

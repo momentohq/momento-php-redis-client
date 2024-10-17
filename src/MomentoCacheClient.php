@@ -322,17 +322,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else {
             $keys = array_merge([$key], $other_keys);
         }
-        $deletedKeys = 0;
         foreach ($keys as $key) {
-            $getResult = $this->client->get($this->cacheName, $key);
-            if ($getResult->asHit()) {
-                $deleteResult = $this->client->delete($this->cacheName, $key);
-                if ($deleteResult->asSuccess()) {
-                    $deletedKeys++;
-                }
-            }
+            $this->client->delete($this->cacheName, $key);
         }
-        return $deletedKeys;
+        return count($keys);
     }
 
     /**
@@ -871,7 +864,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->value();
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapException($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
         }
     }
 
@@ -1494,23 +1487,21 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    return MomentoToPhpRedisExceptionMapper::mapException($result);
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
                 }
-            }
-
-            // Handle XX option: Set only if the key already exists
-            if (in_array('xx', $options, true)) {
+            } elseif (in_array('xx', $options, true)) {
+                // Handle XX option: Set only if the key already exists
                 $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
                 if ($result->asStored()) {
                     return "OK";
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    return MomentoToPhpRedisExceptionMapper::mapException($result);
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
                 }
             }
 
-            // Handle GET option: Return the previous value and set the new value
+            // Handle GET option: Return exception
             if (in_array('get', $options, true)) {
                 throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException('set', 'get');
             }
@@ -1568,7 +1559,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asNotStored()) {
             return false;
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapException($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
         }
     }
 

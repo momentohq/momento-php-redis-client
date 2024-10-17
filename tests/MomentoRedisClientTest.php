@@ -8,14 +8,17 @@ use PHPUnit\Framework\TestCase;
 class MomentoRedisClientTest extends TestCase
 {
     private static Redis $client;
+    private static bool $isRedisBackendTest;
 
     /**
      * Setup cache client before each class.
+     * @throws InvalidArgumentError
      */
     public static function setUpBeforeClass(): void
     {
         SetupIntegrationTest::setupIntegrationTest();
         self::$client = SetupIntegrationTest::getClient();
+        self::$isRedisBackendTest = SetupIntegrationTest::isRedisBackedTest();
     }
 
     /**
@@ -61,7 +64,12 @@ class MomentoRedisClientTest extends TestCase
 
         $nonExistentKey = uniqid();
         $deletedKey = self::$client->del($nonExistentKey);
-        $this->assertEquals(0, $deletedKey, "Expected 0 for a non-existent key");
+
+        if (self::$isRedisBackendTest) {
+            $this->assertEquals(0, $deletedKey, "Expected 0 for a non-existent key");
+        } else {
+            $this->assertEquals(1, $deletedKey, "Expected 1 for a non-existent key");
+        }
 
         $retrievedValues = [];
         for ($i = 0; $i < 3; $i++) {
