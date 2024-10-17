@@ -60,23 +60,18 @@ jobs:
         ports:
           - 6379:6379
 
-    strategy:
-      matrix:
-        backend: [momento, redis]
-        php-version: [8.4]
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Set cache key
         id: cache-key
-        run: echo "key=php-${{ matrix.php-version }}-backend-${{ matrix.backend }}" >> $GITHUB_OUTPUT
+        run: echo "key=php-8.4-backend" >> $GITHUB_OUTPUT
 
       - name: Setup cache environment
         id: extcache
         uses: shivammathur/cache-extensions@v1
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: 8.4
           extensions: grpc, protobuf
           key: ${{ steps.cache-key.outputs.key }}
 
@@ -90,21 +85,19 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: 8.4
           extensions: grpc, protobuf
           tools: composer
 
       - name: Install dependencies
         run: composer install
 
-      - name: Set TEST_REDIS variable dynamically
-        run: echo "TEST_REDIS=$([ '${{ matrix.backend }}' == 'redis' ] && echo true || echo false)" >> $GITHUB_ENV
-
-      - name: Run tests based on backend
+      - name: Run tests with Momento backend
         run: |
-          if [ "${{ matrix.backend }}" = "momento" ]; then
-            echo "Running tests with Momento backend"
-            composer test -- --group momento
-          else
-            echo "Running tests with Redis backend"
-            composer test -- --group redis
+          echo "Running tests with Momento backend"
+          composer test -- --group momento
+
+      - name: Run tests with Redis backend
+        run: |
+          echo "Running tests with Redis backend"
+          composer test -- --group redis
