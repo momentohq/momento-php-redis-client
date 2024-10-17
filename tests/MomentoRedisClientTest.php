@@ -119,7 +119,7 @@ class MomentoRedisClientTest extends TestCase
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
 
-        sleep(5);
+        sleep(6);
         $expiredValue = self::$client->get($key);
         $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
@@ -137,7 +137,7 @@ class MomentoRedisClientTest extends TestCase
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
 
-        sleep(5);
+        sleep(6);
         $expiredValue = self::$client->get($key);
         $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
@@ -155,7 +155,7 @@ class MomentoRedisClientTest extends TestCase
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
 
-        sleep(5);
+        sleep(6);
         $expiredValue = self::$client->get($key);
         $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
@@ -173,7 +173,7 @@ class MomentoRedisClientTest extends TestCase
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
 
-        sleep(5);
+        sleep(6);
         $expiredValue = self::$client->get($key);
         $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
@@ -220,7 +220,7 @@ class MomentoRedisClientTest extends TestCase
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
 
-        sleep(5);
+        sleep(6);
         $expiredValue = self::$client->get($key);
         $this->assertFalse($expiredValue, "Expected false for an expired key");
     }
@@ -250,7 +250,7 @@ class MomentoRedisClientTest extends TestCase
         ]);
         $this->assertFalse($setResult1, "Expected false for an existing key");
 
-        sleep(5);
+        sleep(6);
 
         $getResult1 = self::$client->get($key);
         $this->assertFalse($getResult1, "Expected false for an expired key");
