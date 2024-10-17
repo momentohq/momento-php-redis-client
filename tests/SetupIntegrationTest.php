@@ -25,8 +25,10 @@ class SetupIntegrationTest
         self::$cacheName = self::getTestCacheName();
         self::$logger = (new StderrLoggerFactory())->getLogger("integration-test");
         if (self::isRedisBackedTest()) {
+            self::$logger->info("Running Redis backed tests");
             self::$client = self::setupRedisClient();
         } else {
+            self::$logger->info("Running Momento backed tests");
             self::$client = self::setupMomentoClient();
         }
     }

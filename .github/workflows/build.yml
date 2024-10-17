@@ -105,5 +105,4 @@ jobs:
           TEST_REDIS: true
         run: |
           echo "Running tests with Redis backend"
-          echo "TEST_REDIS=true" >> $GITHUB_ENV
           composer test
