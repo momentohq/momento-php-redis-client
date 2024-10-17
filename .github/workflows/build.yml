@@ -96,6 +96,7 @@ jobs:
         run: |
           echo "Running tests with Momento backend"
           echo "TEST_REDIS=false" >> $GITHUB_ENV
+          echo "MOMENTO_API_KEY=${{ secrets.ALPHA_TEST_AUTH_TOKEN }}" >> $GITHUB_ENV
           composer test
 
       - name: Run tests with Redis backend
