@@ -871,7 +871,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->value();
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
+            return MomentoToPhpRedisExceptionMapper::mapException($result);
         }
     }
 
@@ -1494,7 +1494,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
+                    return MomentoToPhpRedisExceptionMapper::mapException($result);
                 }
             }
 
@@ -1506,7 +1506,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else if ($result->asNotStored()) {
                     return false;
                 } else {
-                    return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
+                    return MomentoToPhpRedisExceptionMapper::mapException($result);
                 }
             }
 
@@ -1568,7 +1568,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asNotStored()) {
             return false;
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapException($result->asError()->innerException());
+            return MomentoToPhpRedisExceptionMapper::mapException($result);
         }
     }
 

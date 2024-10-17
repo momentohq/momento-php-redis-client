@@ -3,7 +3,6 @@
 use Momento\Cache\Errors\InvalidArgumentError;
 use Momento\Cache\Errors\NotImplementedException;
 use Momento\Cache\MomentoCacheClient;
-use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
 use PHPUnit\Framework\TestCase;
 
 class MomentoRedisClientTest extends TestCase

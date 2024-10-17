@@ -12,9 +12,9 @@ services:
     environment:
       - MOMENTO_API_KEY=${MOMENTO_API_KEY}
     depends_on:
-      - phpredis
+      - redis
 
-  phpredis:
+  redis:
     image: redis:latest
     ports:
       - "6379:6379"
