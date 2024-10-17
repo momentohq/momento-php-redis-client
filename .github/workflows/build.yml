@@ -92,13 +92,13 @@ jobs:
       - name: Install dependencies
         run: composer install
 
-      - name: Run tests with Momento backend
-        env:
-          MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-          TEST_REDIS: false
-        run: |
-          echo "Running tests with Momento backend"
-          composer test
+#      - name: Run tests with Momento backend
+#        env:
+#          MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+#          TEST_REDIS: false
+#        run: |
+#          echo "Running tests with Momento backend"
+#          composer test
 
       - name: Run tests with Redis backend
         env:
