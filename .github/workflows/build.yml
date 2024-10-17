@@ -95,9 +95,11 @@ jobs:
       - name: Run tests with Momento backend
         run: |
           echo "Running tests with Momento backend"
-          composer test -- --group momento
+          echo "TEST_REDIS=false" >> $GITHUB_ENV
+          composer test
 
       - name: Run tests with Redis backend
         run: |
           echo "Running tests with Redis backend"
-          composer test -- --group redis
+          echo "TEST_REDIS=true" >> $GITHUB_ENV
+          composer test
