@@ -323,7 +323,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             $keys = array_merge([$key], $other_keys);
         }
         foreach ($keys as $key) {
-            $this->client->delete($this->cacheName, $key);
+            $result = $this->client->delete($this->cacheName, $key);
+            if ($result->asError()) {
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            }
         }
         return count($keys);
     }
