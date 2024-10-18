@@ -470,6 +470,158 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testZAddWithScoreAndMember(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+
+        $result = self::$client->zAdd($key, $score, $member);
+        $this->assertEquals(1, $result, "Failed to add member with score");
+
+        $elements = self::$client->zRevRange($key, 0, 1, true);
+        $this->assertEquals([$member => $score], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZAddMultipleElements(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+        $this->assertEquals(2, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRange($key, 0, 2, true);
+        $this->assertEquals([$member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZAddWithUnsupportedOption(): void
+    {
+        if (!self::$client instanceof MomentoCacheClient) {
+            $this->markTestSkipped("This test is only for Momento client");
+        }
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+
+        $this->expectException(InvalidArgumentError::class);
+        self::$client->zAdd($key, ['nx'], $score, $member);
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeWithScores(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+        $this->assertEquals(2, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRange($key, 0, 2, true);
+        $this->assertEquals([$member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeWithoutScores(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+        $this->assertEquals(2, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRange($key, 0, 2);
+        $this->assertEquals([$member2, $member1], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeWithValidRanks(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3);
+        $this->assertEquals(3, $result, "Failed to add multiple members with scores");
+
+        // Test valid rank range with positive start and end
+        $elements = self::$client->zRevRange($key, 0, 2);
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for positive ranks");
+
+        // Test valid rank range with negative start and end
+        $elements = self::$client->zRevRange($key, -3, -1);
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for negative ranks");
+
+        // Test valid rank range with positive start and negative end
+        $elements = self::$client->zRevRange($key, 0, -1);
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for mixed ranks");
+
+         // Test valid rank range with a subset of elements
+        $elements = self::$client->zRevRange($key, 1, 2);
+        $this->assertEquals([$member2, $member1], $elements, "Elements do not match expected order for a subset of elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeWithInvalidRanks(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+        $this->assertEquals(2, $result, "Failed to add multiple members with scores");
+
+        // Test with start greater than end for positive ranks
+        $result = self::$client->zRevRange($key, 2, 1);
+        $this->assertEmpty($result, "Expected empty array for invalid ranks");
+
+        // Test with start greater than end for negative ranks
+        $result = self::$client->zRevRange($key, -1, -2);
+        $this->assertEmpty($result, "Expected empty array for invalid ranks");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeWhenSortedSetDoesNotExist(): void
+    {
+        $key = uniqid();
+        $result = self::$client->zRevRange($key, 0, 1);
+        $this->assertEmpty($result, "Expected empty array for non-existent key");
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
      * @throws InvalidArgumentError | RedisException
      */
