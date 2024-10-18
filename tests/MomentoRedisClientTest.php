@@ -558,57 +558,62 @@ class MomentoRedisClientTest extends TestCase
     /**
      * @throws RedisException
      */
-    public function testZRevRangeWithValidRanks(): void
+    public function testZRevRangeWithAllRanks(): void
     {
         $key = uniqid();
         $member1 = uniqid();
         $member2 = uniqid();
         $member3 = uniqid();
+        $member4 = uniqid();
         $score1 = 1.0;
         $score2 = 2.0;
         $score3 = 3.0;
+        $score4 = 4.0;
 
-        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3);
-        $this->assertEquals(3, $result, "Failed to add multiple members with scores");
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
+        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
 
-        // Test valid rank range with positive start and end
+        // Test 1: Both start and end are positive, start < end
         $elements = self::$client->zRevRange($key, 0, 2);
-        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for positive ranks");
+        $this->assertCount(3, $elements, "Expected 3 elements for range 0-2");
+        $this->assertEquals([$member4, $member3, $member2], $elements, "Retrieved elements do not match the expected elements");
 
-        // Test valid rank range with negative start and end
+        // Test 2: Both start and end are positive, start == end
+        $elements = self::$client->zRevRange($key, 1, 1);
+        $this->assertCount(1, $elements, "Expected 1 element for range 1-1");
+
+        // Test 3: Both start and end are positive, start > end
+        $elements = self::$client->zRevRange($key, 2, 0);
+        $this->assertEmpty($elements, "Expected empty array for range 2-0");
+
+        // Test 4: Both start and end are negative, start < end
         $elements = self::$client->zRevRange($key, -3, -1);
-        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for negative ranks");
+        $this->assertCount(3, $elements, "Expected to fetch 3 elements for negative range -3 to -1");
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Retrieved elements do not match the expected elements for negative range");
 
-        // Test valid rank range with positive start and negative end
+        // Test 5: Both start and end are negative, start == end
+        $elements = self::$client->zRevRange($key, -2, -2);
+        $this->assertCount(1, $elements, "Expected 1 element for negative range -2 to -2");
+        $this->assertEquals([$member2], $elements, "Retrieved elements do not match the expected elements for negative range");
+
+        // Test 6: Both start and end are negative, start > end
+        $elements = self::$client->zRevRange($key, -1, -3);
+        $this->assertCount(0, $elements, "Expected to fetch 0 elements for invalid range -1 to -3");
+
+        // Test 7: Mixed positive and negative ranks, start positive and end negative
+        $elements = self::$client->zRevRange($key, 0, -2);
+        $this->assertCount(3, $elements, "Expected to fetch 3 elements for mixed range 0 to -2");
+        $this->assertEquals([$member4, $member3, $member2], $elements, "Retrieved elements do not match the expected elements for mixed range");
+
+        // Test 8: Mixed positive and negative ranks, start negative and end positive
+        $elements = self::$client->zRevRange($key, -3, 2);
+        $this->assertCount(2, $elements, "Expected to fetch 2 elements for mixed range -3 to 2");
+        $this->assertEquals([$member3, $member2], $elements, "Retrieved elements do not match the expected elements for mixed range");
+
+        // Test 9: Unbounded end, should fetch all elements
         $elements = self::$client->zRevRange($key, 0, -1);
-        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order for mixed ranks");
-
-         // Test valid rank range with a subset of elements
-        $elements = self::$client->zRevRange($key, 1, 2);
-        $this->assertEquals([$member2, $member1], $elements, "Elements do not match expected order for a subset of elements");
-    }
-
-    /**
-     * @throws RedisException
-     */
-    public function testZRevRangeWithInvalidRanks(): void
-    {
-        $key = uniqid();
-        $member1 = uniqid();
-        $member2 = uniqid();
-        $score1 = 1.0;
-        $score2 = 2.0;
-
-        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
-        $this->assertEquals(2, $result, "Failed to add multiple members with scores");
-
-        // Test with start greater than end for positive ranks
-        $result = self::$client->zRevRange($key, 2, 1);
-        $this->assertEmpty($result, "Expected empty array for invalid ranks");
-
-        // Test with start greater than end for negative ranks
-        $result = self::$client->zRevRange($key, -1, -2);
-        $this->assertEmpty($result, "Expected empty array for invalid ranks");
+        $this->assertCount(4, $elements, "Expected to fetch all elements with unbounded end");
+        $this->assertEquals([$member4, $member3, $member2, $member1], $elements, "Elements do not match expected order for unbounded end");
     }
 
     /**

@@ -2114,19 +2114,24 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zRevRange(string $key, int $start, int $end, mixed $scores = null): Redis|array|false
     {
-        if ($start >= 0 && $end >= 0 && $start > $end) {
-            return [];
-        }
-        if ($start < 0 && $end < 0 && $start > $end) {
+        // Validate ranks: for positive ranks, start must be <= end; for negative, start must be <= end.
+        if (($start >= 0 && $end >= 0 && $start > $end) || ($start < 0 && $end < 0 && $start > $end)) {
             return [];
         }
 
-        // Momento uses exclusive range for end rank, while PhpRedis uses inclusive range
+        // Redis uses inclusive end, so we adjust the end rank by adding 1 for Momento
         $end = $end + 1;
 
+        // Handle the unbounded end case (-1 in Redis means unbounded, but we need to handle it in Momento)
+        if ($end == 0) {
+            $end = null;
+        }
+
+        var_dump("start: $start, end: $end");
         $result = $this->client->sortedSetFetchByRank($this->cacheName, $key, $start, $end, SORT_DESC);
         if ($result->asHit()) {
             $elements = $result->asHit()->valuesArray();
+            var_dump($elements);
             if ($scores === true) {
                 return $elements;
             } else {
