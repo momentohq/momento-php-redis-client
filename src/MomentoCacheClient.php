@@ -416,7 +416,48 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function expire(string $key, int $timeout, ?string $mode = null): Redis|bool
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        // Mode 'nx' is not supported
+        if ($mode === 'nx') {
+            throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, "nx");
+        }
+
+        $ttl = $timeout * 1000; // convert to milliseconds
+
+        // Mode 'lt' - decrease TTL if the new TTL is less than current
+        if ($mode === 'lt') {
+            $result = $this->client->decreaseTtl($this->cacheName, $key, $ttl);
+            if ($result->asSet()) {
+                return true;
+            } elseif ($result->asNotSet()) {
+                return false;
+            } elseif ($result->asMiss()) {
+                return false;
+            } else {
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            }
+        } elseif ($mode === 'gt') {
+            // Mode 'gt' - increase TTL if the new TTL is greater than current
+            $result = $this->client->increaseTtl($this->cacheName, $key, $ttl);
+            if ($result->asSet()) {
+                return true;
+            } elseif ($result->asNotSet()) {
+                return false;
+            } elseif ($result->asMiss()) {
+                return false;
+            } else {
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            }
+        }
+
+        // Mode 'xx' or null - update TTL
+        $result = $this->client->updateTtl($this->cacheName, $key, $ttl);
+        if ($result->asSet()) {
+            return true;
+        } elseif ($result->asMiss()) {
+            return false;
+        } else {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        }
     }
 
     /**
@@ -1469,6 +1510,11 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if (is_array($options)) {
             $options = array_change_key_case($options, CASE_LOWER);
 
+            // Handle GET option: Return exception
+            if (in_array('get', $options, true)) {
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'get');
+            }
+
             // Handle different TTL options (EX, PX, EXAT, PXAT)
             if (isset($options['ex'])) {
                 $ttl = $options['ex'];
@@ -1479,7 +1525,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             } elseif (isset($options['pxat'])) {
                 $ttl = floor(($options['pxat'] - microtime(true) * 1000) / 1000);
             } elseif (isset($options['keepttl'])) {
-                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException('set', 'keepttl');
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'keepttl');
             }
 
             // Handle NX option: Set if the key does not exist
@@ -1502,11 +1548,6 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } else {
                     return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
                 }
-            }
-
-            // Handle GET option: Return exception
-            if (in_array('get', $options, true)) {
-                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException('set', 'get');
             }
         }
 
@@ -1723,7 +1764,14 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function ttl(string $key): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $result = $this->client->itemGetTtl($this->cacheName, $key);
+        if ($result->asHit()) {
+            return $result->asHit()->remainingTtlMillis();
+        } else if ($result->asMiss()) {
+            return -2;
+        } else {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        }
     }
 
     /**
