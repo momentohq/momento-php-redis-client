@@ -432,8 +432,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 return false;
             } elseif ($result->asMiss()) {
                 return false;
-            } else {
+            } elseif ($result->asError()) {
                 return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            } else {
+                return false;
             }
         } elseif ($mode === 'gt') {
             // Mode 'gt' - increase TTL if the new TTL is greater than current
@@ -455,8 +457,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             return true;
         } elseif ($result->asMiss()) {
             return false;
-        } else {
+        } elseif ($result->asError()) {
             return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
         }
     }
 
@@ -617,6 +621,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->get($this->cacheName, $key);
         if ($result->asHit()) {
             return $result->asHit()->valueString();
+        } elseif ($result->asMiss()) {
+            return false;
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
         } else {
             return false;
         }
@@ -907,8 +915,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->increment($this->cacheName, $key, $value);
         if ($result->asSuccess()) {
             return $result->asSuccess()->value();
-        } else {
+        } elseif ($result->asError()) {
             return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
         }
     }
 
@@ -1533,20 +1543,24 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
                 if ($result->asStored()) {
                     return "OK";
-                } else if ($result->asNotStored()) {
+                } elseif ($result->asNotStored()) {
                     return false;
-                } else {
+                } elseif ($result->asError()) {
                     return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                } else {
+                    return false;
                 }
             } elseif (in_array('xx', $options, true)) {
                 // Handle XX option: Set only if the key already exists
                 $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
                 if ($result->asStored()) {
                     return "OK";
-                } else if ($result->asNotStored()) {
+                } elseif ($result->asNotStored()) {
                     return false;
-                } else {
+                } elseif ($result->asError()) {
                     return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                } else {
+                    return false;
                 }
             }
         }
