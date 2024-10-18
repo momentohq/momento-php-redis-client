@@ -12,7 +12,7 @@ class MomentoRedisClientTest extends TestCase
 
     /**
      * Setup cache client before each class.
-     * @throws InvalidArgumentError
+     * @throws InvalidArgumentError|RedisException
      */
     public static function setUpBeforeClass(): void
     {
@@ -310,6 +310,148 @@ class MomentoRedisClientTest extends TestCase
         $this->assertEquals('OK', $setResult, "Expected OK for non-existing key");
         $getResult = self::$client->get($key);
         $this->assertEquals($value, $getResult, "Retrieved value does not match the set value");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testItemGetTtl(): void
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $ttlSeconds = 10;
+        $setResult = self::$client->set($key, $value, ['ex' => $ttlSeconds]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $remainingTtlMillis = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($ttlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testItemGetTtlForNonExistentKey(): void
+    {
+        $key = uniqid();
+        $ttlMillis = self::$client->ttl($key);
+        $this->assertEquals(-2, $ttlMillis, "Expected -2 for a non-existent key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWhenKeyDoesNotExist()
+    {
+        $key = uniqid();
+        $value = uniqid();
+        self::$client->set($key, $value, ['ex' => 5]);
+
+        sleep(6);
+
+        $updateTtlSeconds = 10;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds);
+        $this->assertFalse($expireResult, "Expected false for a non-existing key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWithNullMode()
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $setResult = self::$client->set($key, $value, ['ex' => 30]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $updateTtlSeconds = 60;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds);
+        $this->assertTrue($expireResult, "Expected true for an existing key");
+
+        $remainingTtlMillis = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($updateTtlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWithXx()
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $setResult = self::$client->set($key, $value, ['ex' => 30]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $updateTtlSeconds = 60;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds, 'xx');
+        $this->assertTrue($expireResult, "Expected true for an existing key");
+
+        $remainingTtlMillis = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($updateTtlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWithLt()
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $setResult = self::$client->set($key, $value, ['ex' => 60]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $updateTtlSeconds = 90;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds, 'lt');
+        $this->assertFalse($expireResult, "Expected false for a existing key with current TTL less than the update TTL");
+
+        $updateTtlSeconds = 30;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds, 'lt');
+        $this->assertTrue($expireResult, "Expected true for an existing key with current TTL less than the update TTL");
+
+        $remainingTtlMillis = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($updateTtlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWithGt()
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $setResult = self::$client->set($key, $value, ['ex' => 30]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $updateTtlSeconds = 10;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds, 'gt');
+        $this->assertFalse($expireResult, "Expected false for a existing key with current TTL greater than the update TTL");
+
+        $updateTtlSeconds = 60;
+        $expireResult = self::$client->expire($key, $updateTtlSeconds, 'gt');
+        $this->assertTrue($expireResult, "Expected true for an existing key with current TTL greater than the update TTL");
+
+        $remainingTtlMillis = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($updateTtlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExpireWithNxException()
+    {
+        if (!self::$client instanceof MomentoCacheClient) {
+            $this->markTestSkipped("This test is only for Momento client");
+        }
+
+        $key = uniqid();
+        $updateTtlMilliSeconds = 60 * 1000;
+
+        $this->expectException(InvalidArgumentError::class);
+        self::$client->expire($key, $updateTtlMilliSeconds, 'nx');
     }
 
     /**
