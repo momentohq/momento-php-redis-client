@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ef3c865773304b153af004bd65e4b23",
+    "content-hash": "78012dbb009782c5422c82cb4b7e69aa",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -177,16 +177,16 @@
         },
         {
             "name": "momentohq/client-sdk-php",
-            "version": "v1.13.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/momentohq/client-sdk-php.git",
-                "reference": "da5a7e8834be0a35b693d67e80152b10cf06168f"
+                "reference": "d5719a86367d08072ea63a51673328223582b3bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/da5a7e8834be0a35b693d67e80152b10cf06168f",
-                "reference": "da5a7e8834be0a35b693d67e80152b10cf06168f",
+                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/d5719a86367d08072ea63a51673328223582b3bf",
+                "reference": "d5719a86367d08072ea63a51673328223582b3bf",
                 "shasum": ""
             },
             "require": {
@@ -203,6 +203,7 @@
                 "friendsofphp/php-cs-fixer": "3.64.0",
                 "phpunit/phpunit": "^9.5.23"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -251,7 +252,7 @@
                 "issues": "https://github.com/momentohq/client-sdk-php/issues",
                 "source": "https://github.com/momentohq/client-sdk-php"
             },
-            "time": "2024-10-15T20:54:26+00:00"
+            "time": "2024-10-18T17:42:41+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -3873,16 +3874,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.6",
+            "version": "1.12.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "dc4d2f145a88ea7141ae698effd64d9df46527ae"
+                "reference": "dc2b9976bd8b0f84ec9b0e50cc35378551de7af0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/dc4d2f145a88ea7141ae698effd64d9df46527ae",
-                "reference": "dc4d2f145a88ea7141ae698effd64d9df46527ae",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/dc2b9976bd8b0f84ec9b0e50cc35378551de7af0",
+                "reference": "dc2b9976bd8b0f84ec9b0e50cc35378551de7af0",
                 "shasum": ""
             },
             "require": {
@@ -3927,7 +3928,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-10-06T15:03:59+00:00"
+            "time": "2024-10-18T11:12:07+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -4917,16 +4918,16 @@
         },
         {
             "name": "rector/rector",
-            "version": "1.2.7",
+            "version": "1.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "5b33bdd871895276e2c18e5410a4a57df9233ee0"
+                "reference": "05755bf43617449c08ee8e50fb840c85ad3b1240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/5b33bdd871895276e2c18e5410a4a57df9233ee0",
-                "reference": "5b33bdd871895276e2c18e5410a4a57df9233ee0",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/05755bf43617449c08ee8e50fb840c85ad3b1240",
+                "reference": "05755bf43617449c08ee8e50fb840c85ad3b1240",
                 "shasum": ""
             },
             "require": {
@@ -4964,7 +4965,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/1.2.7"
+                "source": "https://github.com/rectorphp/rector/tree/1.2.8"
             },
             "funding": [
                 {
@@ -4972,7 +4973,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-10-12T11:12:46+00:00"
+            "time": "2024-10-18T11:54:27+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -8948,9 +8949,11 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": {},
-    "prefer-stable": false,
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "momentohq/client-sdk-php": 20
+    },
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "ext-redis": "*"

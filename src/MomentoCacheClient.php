@@ -5,7 +5,6 @@ namespace Momento\Cache;
 use Exception;
 use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
 use Redis;
-use TypeError;
 
 class MomentoCacheClient extends Redis implements IMomentoRedisClient
 {
@@ -1943,10 +1942,29 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     /**
      * @throws Exception
      */
-    public function zAdd(string $key, array|float $score_or_options, mixed ...$more_scores_and_mems): Redis|int|float|false
+    public function zAdd(string $key, float|array $score_or_options, mixed ...$more_scores_and_mems): Redis|int|float|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        // Check if the first argument is an array
+        if (is_array($score_or_options)) {
+            // Check for unsupported options in Redis
+            if (in_array('nx', $score_or_options) || in_array('xx', $score_or_options) ||
+                in_array('gt', $score_or_options) || in_array('lt', $score_or_options) ||
+                in_array('ch', $score_or_options) || in_array('incr', $score_or_options)) {
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, "nx, xx, gt, lt, ch, incr");
+            }
+            $elements = $this->extractElementsFromOptions($score_or_options);
+        } else {
+            $elements = $this->buildElementsArray($score_or_options, $more_scores_and_mems);
+        }
+
+        $result = $this->client->sortedSetPutElements($this->cacheName, $key, $elements);
+        if ($result->asSuccess()) {
+            return count($elements);
+        } else {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        }
     }
+
 
     /**
      * @throws Exception
@@ -2094,7 +2112,33 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zRevRange(string $key, int $start, int $end, mixed $scores = null): Redis|array|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        if ($start >= 0 && $end >= 0 && $start > $end) {
+            return [];
+        }
+        if ($start < 0 && $end < 0 && $start > $end) {
+            return [];
+        }
+
+        // Momento uses exclusive range for end rank, while PhpRedis uses inclusive range
+        $end = $end + 1;
+
+        $result = $this->client->sortedSetFetchByRank($this->cacheName, $key, $start, $end, SORT_DESC);
+        if ($result->asHit()) {
+            $elements = $result->asHit()->valuesArray();
+            if ($scores === true) {
+                return $elements;
+            } else {
+                $members = [];
+                foreach ($elements as $member => $score) {
+                    $members[] = $member;
+                }
+                return $members;
+            }
+        } else if ($result->asMiss()) {
+            return [];
+        } else {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        }
     }
 
     /**
@@ -2191,5 +2235,34 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     public function zunionstore(string $dst, array $keys, ?array $weights = null, ?string $aggregate = null): Redis|int|false
     {
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+    }
+
+    private function extractElementsFromOptions(array $score_or_options): array
+    {
+        $elements = [];
+        foreach ($score_or_options as $score => $member) {
+            if (is_numeric($score)) {
+                $elements[$member] = (float) $score;
+            }
+        }
+        return $elements;
+    }
+
+    private function buildElementsArray(float $initialScore, array $more_scores_and_mems): array
+    {
+        $elements = [];
+        // First element is the initial score and member
+        $elements[$more_scores_and_mems[0]] = $initialScore;
+
+        // Remaining arguments must follow the pattern: score, member, score, member, etc.
+        for ($i = 1; $i < count($more_scores_and_mems); $i += 2) {
+            $score = $more_scores_and_mems[$i];
+            $member = $more_scores_and_mems[$i + 1] ?? null;
+            if ($member !== null) {
+                $elements[$member] = (float) $score;
+            }
+        }
+
+        return $elements;
     }
 }
