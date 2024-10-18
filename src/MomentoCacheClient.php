@@ -1960,8 +1960,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->sortedSetPutElements($this->cacheName, $key, $elements);
         if ($result->asSuccess()) {
             return count($elements);
-        } else {
+        } elseif ($result->asError()) {
             return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
         }
     }
 
@@ -2134,10 +2136,12 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 }
                 return $members;
             }
-        } else if ($result->asMiss()) {
+        } elseif ($result->asMiss()) {
             return [];
-        } else {
+        } elseif ($result->asError()) {
             return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
         }
     }
 
