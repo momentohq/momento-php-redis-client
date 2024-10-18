@@ -35,7 +35,8 @@ class SetupIntegrationTest
 
     public static function isRedisBackedTest(): bool
     {
-        return getenv('TEST_REDIS') === 'true';
+        $test_redis_env = getenv('TEST_REDIS');
+        return $test_redis_env === 'true' || $test_redis_env === '1';
     }
 
     /**
