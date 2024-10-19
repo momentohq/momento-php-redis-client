@@ -2127,11 +2127,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             $end = null;
         }
 
-        var_dump("start: $start, end: $end");
         $result = $this->client->sortedSetFetchByRank($this->cacheName, $key, $start, $end, SORT_DESC);
         if ($result->asHit()) {
             $elements = $result->asHit()->valuesArray();
-            var_dump($elements);
             if ($scores === true) {
                 return $elements;
             } else {
