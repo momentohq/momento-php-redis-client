@@ -665,6 +665,74 @@ class MomentoRedisClientTest extends TestCase
     /**
      * @throws RedisException
      */
+    public function testZRemOnMissingKey(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $result = self::$client->zRem($key, $member);
+
+        if (self::$isRedisBackendTest) {
+            $this->assertEquals(0, $result, "Expected 0 for missing key");
+        } else {
+            $this->assertEquals(1, $result, "Expected 1 for missing key");
+        }
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRemOnMissingMember(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+        self::$client->zAdd($key, $score, $member);
+
+        $missingMember = uniqid();
+        $result = self::$client->zRem($key, $missingMember);
+        if (self::$isRedisBackendTest) {
+            $this->assertEquals(0, $result, "Expected 0 for missing member");
+        } else {
+            $this->assertEquals(1, $result, "Expected 1 for missing member");
+        }
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRemOnExistingMember(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+        self::$client->zAdd($key, $score, $member);
+
+        $result = self::$client->zRem($key, $member);
+        $this->assertEquals(1, $result, "Failed to remove the member");
+
+        $elements = self::$client->zRevRange($key, 0, 1, true);
+        $this->assertEmpty($elements, "Expected empty array after removing the member");
+    }
+
+    public function testZRemOnMultipleMembers(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+
+        $result = self::$client->zRem($key, $member1, $member2);
+        $this->assertEquals(2, $result, "Failed to remove multiple members");
+
+        $elements = self::$client->zRevRange($key, 0, 1, true);
+        $this->assertEmpty($elements, "Expected empty array after removing the members");
+    }
+
+    /**
+     * @throws RedisException
+     */
     public function testZScoreOnMissingKey(): void
     {
         $key = uniqid();

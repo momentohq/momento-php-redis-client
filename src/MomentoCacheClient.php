@@ -2103,7 +2103,20 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zRem(mixed $key, mixed $member, mixed ...$other_members): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        if (is_array($member)) {
+            $members = $member;
+        } else {
+            $members = array_merge([$member], $other_members);
+        }
+
+        $result = $this->client->sortedSetRemoveElements($this->cacheName, $key, $members);
+        if ($result->asSuccess()) {
+            return count($members);
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
+        }
     }
 
     /**
