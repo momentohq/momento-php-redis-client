@@ -627,6 +627,46 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testZScoreOnMissingKey(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $result = self::$client->zScore($key, $member);
+        $this->assertFalse($result, "Expected false for missing key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZScoreOnMissingMember(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+        self::$client->zAdd($key, $score, $member);
+
+        $missingMember = uniqid();
+        $result = self::$client->zScore($key, $missingMember);
+        $this->assertFalse($result, "Expected false for missing member");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZScoreOnExistingMember(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+        self::$client->zAdd($key, $score, $member);
+
+        $result = self::$client->zScore($key, $member);
+        $this->assertEquals($score, $result, "Retrieved score does not match the expected score");
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
      * @throws InvalidArgumentError | RedisException
      */

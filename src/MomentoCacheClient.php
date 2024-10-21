@@ -2191,7 +2191,16 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zScore(string $key, mixed $member): Redis|float|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $result = $this->client->sortedSetGetScore($this->cacheName, $key, $member);
+        if ($result->asHit()) {
+            return $result->asHit()->score();
+        } elseif ($result->asMiss()) {
+            return false;
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
+        }
     }
 
     /**
