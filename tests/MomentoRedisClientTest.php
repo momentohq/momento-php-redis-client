@@ -627,6 +627,42 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testZIncrByWhenKeyExists(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+
+        $result = self::$client->zAdd($key, $score, $member);
+        $this->assertEquals(1, $result, "Failed to add member with score");
+
+        $incrScore = 2.0;
+        $newScore = self::$client->zIncrBy($key, $incrScore, $member);
+        $this->assertEquals($score + $incrScore, $newScore, "Failed to increment the score");
+
+        $elements = self::$client->zRevRange($key, 0, 1, true);
+        $this->assertEquals([$member => $score + $incrScore], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZIncrByWhenKeyDoesNotExist(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $incrScore = 2.0;
+
+        $newScore = self::$client->zIncrBy($key, $incrScore, $member);
+        $this->assertEquals($incrScore, $newScore, "Failed to increment the score");
+
+        $elements = self::$client->zRevRange($key, 0, 1, true);
+        $this->assertEquals([$member => $incrScore], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
      * @throws InvalidArgumentError | RedisException
      */
