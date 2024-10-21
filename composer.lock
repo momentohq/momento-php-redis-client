@@ -181,12 +181,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/momentohq/client-sdk-php.git",
-                "reference": "8d41a6ec34a1ddf12af87e035ac5e8e71913aeaa"
+                "reference": "1b150b4aa9594cb0856b3a2f0d003438d7d16285"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/8d41a6ec34a1ddf12af87e035ac5e8e71913aeaa",
-                "reference": "8d41a6ec34a1ddf12af87e035ac5e8e71913aeaa",
+                "reference": "1b150b4aa9594cb0856b3a2f0d003438d7d16285",
                 "shasum": ""
             },
             "require": {

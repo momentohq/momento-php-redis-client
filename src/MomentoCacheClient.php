@@ -3,7 +3,9 @@
 namespace Momento\Cache;
 
 use Exception;
+use InvalidArgumentException;
 use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
+use Momento\Cache\Utils\RangeValue;
 use Redis;
 
 class MomentoCacheClient extends Redis implements IMomentoRedisClient
@@ -1995,7 +1997,28 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zCount(string $key, int|string $start, int|string $end): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        try {
+            $startRangeValue = RangeValue::parse($start);
+            $endRangeValue = RangeValue::parse($end);
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
+
+        $startValueForMomento = $startRangeValue->isFinite() ? $startRangeValue->getValue() : null;
+        $endValueForMomento = $endRangeValue->isFinite() ? $endRangeValue->getValue() : null;
+        $result = $this->client->sortedSetLengthByScore(
+            $this->cacheName, $key,
+            $startValueForMomento, $startRangeValue->isInclusive(),
+            $endValueForMomento, $endRangeValue->isInclusive());
+        if ($result->asHit()) {
+            return $result->asHit()->length();
+        } elseif ($result->asMiss()) {
+            return 0;
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
+        }
     }
 
     /**

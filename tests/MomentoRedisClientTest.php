@@ -522,6 +522,133 @@ class MomentoRedisClientTest extends TestCase
     /**
      * @throws RedisException
      */
+    public function testZCountWithValidRange(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        // Add members to the sorted set
+        self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+
+        // Count members in the range [1.0, 2.0]
+        $count = self::$client->zCount($key, 1.0, 2.0);
+        $this->assertEquals(2, $count, "Expected count of 2 for range [1.0, 2.0]");
+
+        // Count members in the range (1.0, 2.0), exclusive of 1.0
+        $count = self::$client->zCount($key, "(1.0", 2.0);
+        $this->assertEquals(1, $count, "Expected count of 1 for range (1.0, 2.0)");
+
+        // Count members in the range (1.0, (2.0), exclusive of both 1.0 and 2.0
+        $count = self::$client->zCount($key, "(1.0", "(2.0");
+        $this->assertEquals(0, $count, "Expected count of 0 for range (1.0, (2.0)");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZCountWithNonExistentKey(): void
+    {
+        $key = 'non_existent_key';
+
+        // Count members in a non-existent key
+        $count = self::$client->zCount($key, 1.0, 2.0);
+        $this->assertEquals(0, $count, "Expected count of 0 for a non-existent key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZCountWithInvalidRange(): void
+    {
+        $key = uniqid();
+        $member = uniqid();
+        $score = 1.0;
+
+        // Add member to the sorted set
+        self::$client->zAdd($key, $score, $member);
+
+        // Try to count members with an invalid range
+        $count = self::$client->zCount($key, "invalid", 2.0);
+        $this->assertFalse($count, "Expected false for an invalid start range");
+
+        $count = self::$client->zCount($key, 1.0, "invalid");
+        $this->assertFalse($count, "Expected false for an invalid end range");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZCountWithInclusiveExclusiveRanges(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+
+        // Add members to the sorted set
+        self::$client->zAdd($key, $score1, $member1, $score2, $member2);
+
+        // Count members with inclusive start and exclusive end
+        $count = self::$client->zCount($key, "1", "(2");
+        $this->assertEquals(1, $count, "Expected count of 1 for range [1, 2)");
+
+        // Count members with exclusive start and inclusive end
+        $count = self::$client->zCount($key, "(1", "2");
+        $this->assertEquals(1, $count, "Expected count of 1 for range (1, 2]");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZCountWithOpenEndedRanges(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+
+        // Add members to the sorted set
+        self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3);
+
+        // Count all members from -inf to +inf
+        $count = self::$client->zCount($key, "-inf", "+inf");
+        $this->assertEquals(3, $count, "Expected count of 3 for range -inf to +inf");
+
+        // Count members from 2.0 to +inf
+        $count = self::$client->zCount($key, 2.0, "+inf");
+        $this->assertEquals(2, $count, "Expected count of 2 for range [2.0, +inf)");
+
+        // Count members from -inf to 2.0
+        $count = self::$client->zCount($key, "-inf", 2.0);
+        $this->assertEquals(2, $count, "Expected count of 2 for range [-inf, 2.0]");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZCountWithMissedKeyAndErrorHandling(): void
+    {
+        $key = uniqid();
+
+        // Count for a key that doesn't exist
+        $result = self::$client->zCount($key, 1.0, 2.0);
+        $this->assertEquals(0, $result, "Expected count 0 of a non-existent key");
+
+        // Simulate an error condition
+        $result = self::$client->zCount("", 1.0, 2.0);
+        $this->assertEquals(0, $result, "Expected 0 for an empty key");
+    }
+
+    /**
+     * @throws RedisException
+     */
     public function testZRevRangeWithScores(): void
     {
         $key = uniqid();
