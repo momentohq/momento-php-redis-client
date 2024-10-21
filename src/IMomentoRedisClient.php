@@ -16,4 +16,5 @@ interface IMomentoRedisClient
     public function zAdd(string $key, float|array $score_or_options, mixed ...$more_scores_and_mems): Redis|int|float|false;
     public function zRevRange(string $key, int $start, int $end, mixed $scores = null): Redis|array|false;
     public function zScore(string $key, mixed $member): Redis|float|false;
+    public function zIncrBy(string $key, float $value, mixed $member): Redis|float|false;
 }
