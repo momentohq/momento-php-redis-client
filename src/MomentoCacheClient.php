@@ -2190,11 +2190,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             if ($scores === true) {
                 return $elements;
             } else {
-                $members = [];
-                foreach ($elements as $member => $score) {
-                    $members[] = $member;
-                }
-                return $members;
+                return array_keys($elements);
             }
         } elseif ($result->asMiss()) {
             return [];
@@ -2235,19 +2231,23 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             $withScores = true;
         }
 
-        $minScore = $this->convertScoreToFloat($min);
-        $maxScore = $this->convertScoreToFloat($max);
+        try {
+            $minRangeValue = RangeValue::parse($min);
+            $maxRangeValue = RangeValue::parse($max);
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
 
         $result = $this->client->sortedSetFetchByScore(
             $this->cacheName,
             $key,
-            $minScore,
-            !$this->isExclusiveScore($min),
-            $maxScore,
-            !$this->isExclusiveScore($max),
+            $minRangeValue->isFinite() ? $minRangeValue->getValue() : null,
+            $minRangeValue->isInclusive(),
+            $maxRangeValue->isFinite() ? $maxRangeValue->getValue() : null,
+            $maxRangeValue->isInclusive(),
             SORT_DESC,
             $limitStart,
-            $limitCount,
+            $limitCount
         );
 
         if ($result->asHit()) {
@@ -2255,11 +2255,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             if ($withScores) {
                 return $elements;
             } else {
-                $members = [];
-                foreach ($elements as $member => $score) {
-                    $members[] = $member;
-                }
-                return $members;
+                return array_keys($elements);
             }
         } elseif ($result->asMiss()) {
             return [];
@@ -2386,27 +2382,5 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         }
 
         return $elements;
-    }
-
-    private function convertScoreToFloat(string $score): float
-    {
-        if ($score === "-inf") {
-            return -INF;
-        }
-        if ($score === "+inf") {
-            return INF;
-        }
-        // Handle exclusive scores (e.g., "(5" means score > 5)
-        if ($this->isExclusiveScore($score)) {
-            return (float)substr($score, 1);
-        }
-
-        // Return as float for regular scores
-        return (float)$score;
-    }
-
-    private function isExclusiveScore(string $score): bool
-    {
-        return str_starts_with($score, '(');
     }
 }
