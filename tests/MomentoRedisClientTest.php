@@ -663,15 +663,6 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
-     * Tear down after all tests. This will clean up Redis or Momento resources.
-     * @throws InvalidArgumentError | RedisException
-     */
-    public static function tearDownAfterClass(): void
-    {
-        SetupIntegrationTest::tearDownIntegrationTests();
-    }
-
-    /**
      * @throws RedisException
      */
     public function testZScoreOnMissingKey(): void
