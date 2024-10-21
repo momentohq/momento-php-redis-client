@@ -898,6 +898,114 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testZRevRangeByScoreWithInclusiveRanges(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $member4 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+        $score4 = 4.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
+        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRangeByScore($key, $score3, $score1);
+        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1");
+        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeByScoreWithScores(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $member4 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+        $score4 = 4.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
+        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+
+        // First way to get the elements with scores
+        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, ['withscores' => true]);
+        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
+        $this->assertEquals([$member3 => $score3, $member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
+
+        // Second way to get the elements with scores
+        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, true);
+        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
+        $this->assertEquals([$member3 => $score3, $member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeByScoreWithoutScores(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $member4 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+        $score4 = 4.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
+        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, false);
+        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeByScoreWithLimit(): void
+    {
+        $key = uniqid();
+        $member1 = uniqid();
+        $member2 = uniqid();
+        $member3 = uniqid();
+        $member4 = uniqid();
+        $score1 = 1.0;
+        $score2 = 2.0;
+        $score3 = 3.0;
+        $score4 = 4.0;
+
+        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
+        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+
+        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, ['limit' => [0, 2]]);
+        $this->assertCount(2, $elements, "Expected 2 elements for range 3-1 with limit");
+        $this->assertEquals([$member3, $member2], $elements, "Retrieved elements do not match the added elements");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testZRevRangeByScoreOnMissingKey(): void
+    {
+        $key = uniqid();
+        $result = self::$client->zRevRangeByScore($key, 0, 1);
+        $this->assertEmpty($result, "Expected empty array for non-existent key");
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
      * @throws InvalidArgumentError | RedisException
      */
