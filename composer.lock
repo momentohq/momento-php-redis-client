@@ -181,12 +181,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/momentohq/client-sdk-php.git",
-                "reference": "1b150b4aa9594cb0856b3a2f0d003438d7d16285"
+                "reference": "a8cfed84a6c56ae647edaa74d7a326efea202912"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/1b150b4aa9594cb0856b3a2f0d003438d7d16285",
-                "reference": "1b150b4aa9594cb0856b3a2f0d003438d7d16285",
+                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/a8cfed84a6c56ae647edaa74d7a326efea202912",
+                "reference": "a8cfed84a6c56ae647edaa74d7a326efea202912",
                 "shasum": ""
             },
             "require": {
@@ -252,7 +252,7 @@
                 "issues": "https://github.com/momentohq/client-sdk-php/issues",
                 "source": "https://github.com/momentohq/client-sdk-php"
             },
-            "time": "2024-10-21T20:48:13+00:00"
+            "time": "2024-10-21T21:52:05+00:00"
         },
         {
             "name": "phpoption/phpoption",

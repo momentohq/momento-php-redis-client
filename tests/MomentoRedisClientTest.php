@@ -900,7 +900,7 @@ class MomentoRedisClientTest extends TestCase
     /**
      * @throws RedisException
      */
-    public function testZRevRangeByScoreWithInclusiveRanges(): void
+    public function testZRevRangeByScore(): void
     {
         $key = uniqid();
         $member1 = uniqid();
@@ -915,84 +915,46 @@ class MomentoRedisClientTest extends TestCase
         $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
         $this->assertEquals(4, $result, "Failed to add multiple members with scores");
 
+        // Test 1: Both min and max are inclusive
         $elements = self::$client->zRevRangeByScore($key, $score3, $score1);
         $this->assertCount(3, $elements, "Expected 3 elements for range 3-1");
-        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1");
-    }
+        $this->assertEquals([$member3, $member2, $member1], $elements, "Elements do not match expected order");
 
-    /**
-     * @throws RedisException
-     */
-    public function testZRevRangeByScoreWithScores(): void
-    {
-        $key = uniqid();
-        $member1 = uniqid();
-        $member2 = uniqid();
-        $member3 = uniqid();
-        $member4 = uniqid();
-        $score1 = 1.0;
-        $score2 = 2.0;
-        $score3 = 3.0;
-        $score4 = 4.0;
+        // Test 2: Both min and max are exclusive
+        $elements = self::$client->zRevRangeByScore($key, "($score3", "($score1");
+        $this->assertCount(1, $elements, "Expected 1 element for exclusive range (3-1)");
+        $this->assertEquals([$member2], $elements, "Elements do not match expected result for exclusive range");
 
-        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
-        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+        // Test 3: With WITHSCORES option
+        // Test 3.1: First way to get the elements with scores
+        $elementsWithScores = self::$client->zRevRangeByScore($key, $score4, $score1, ['withscores' => true]);
+        $this->assertCount(4, $elementsWithScores, "Expected 4 elements with scores for range 4-1");
+        $expectedWithScores = [$member4 => $score4, $member3 => $score3, $member2 => $score2, $member1 => $score1];
+        $this->assertEquals($expectedWithScores, $elementsWithScores, "Elements with scores do not match expected values");
 
-        // First way to get the elements with scores
-        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, ['withscores' => true]);
-        $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
-        $this->assertEquals([$member3 => $score3, $member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
-
-        // Second way to get the elements with scores
+        // Test 3.2: Second way to get the elements with scores
         $elements = self::$client->zRevRangeByScore($key, $score3, $score1, true);
         $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
         $this->assertEquals([$member3 => $score3, $member2 => $score2, $member1 => $score1], $elements, "Retrieved elements do not match the added elements");
-    }
 
-    /**
-     * @throws RedisException
-     */
-    public function testZRevRangeByScoreWithoutScores(): void
-    {
-        $key = uniqid();
-        $member1 = uniqid();
-        $member2 = uniqid();
-        $member3 = uniqid();
-        $member4 = uniqid();
-        $score1 = 1.0;
-        $score2 = 2.0;
-        $score3 = 3.0;
-        $score4 = 4.0;
-
-        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
-        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
-
+        // Test 4: Without WITHSCORES option
         $elements = self::$client->zRevRangeByScore($key, $score3, $score1, false);
         $this->assertCount(3, $elements, "Expected 3 elements for range 3-1 with scores");
         $this->assertEquals([$member3, $member2, $member1], $elements, "Retrieved elements do not match the added elements");
-    }
 
-    /**
-     * @throws RedisException
-     */
-    public function testZRevRangeByScoreWithLimit(): void
-    {
-        $key = uniqid();
-        $member1 = uniqid();
-        $member2 = uniqid();
-        $member3 = uniqid();
-        $member4 = uniqid();
-        $score1 = 1.0;
-        $score2 = 2.0;
-        $score3 = 3.0;
-        $score4 = 4.0;
+        // Test 5: Range with negative infinity (-inf)
+        $elements = self::$client->zRevRangeByScore($key, '+inf', '-inf');
+        $this->assertCount(4, $elements, "Expected 4 elements for range +inf to -inf");
+        $this->assertEquals([$member4, $member3, $member2, $member1], $elements, "Elements do not match expected result for +inf to -inf");
 
-        $result = self::$client->zAdd($key, $score1, $member1, $score2, $member2, $score3, $member3, $score4, $member4);
-        $this->assertEquals(4, $result, "Failed to add multiple members with scores");
+        // Test 6: Applying LIMIT option (fetch first 2 elements)
+        $elements = self::$client->zRevRangeByScore($key, $score4, $score1, ['limit' => [0, 2]]);
+        $this->assertCount(2, $elements, "Expected 2 elements for limit 2");
+        $this->assertEquals([$member4, $member3], $elements, "Elements do not match expected result with LIMIT");
 
-        $elements = self::$client->zRevRangeByScore($key, $score3, $score1, ['limit' => [0, 2]]);
-        $this->assertCount(2, $elements, "Expected 2 elements for range 3-1 with limit");
-        $this->assertEquals([$member3, $member2], $elements, "Retrieved elements do not match the added elements");
+        // Test 7: Min greater than Max (invalid range)
+        $elements = self::$client->zRevRangeByScore($key, $score1, $score3);
+        $this->assertEmpty($elements, "Expected empty array for invalid range");
     }
 
     /**
