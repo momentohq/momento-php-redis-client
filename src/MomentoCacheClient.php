@@ -2190,11 +2190,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             if ($scores === true) {
                 return $elements;
             } else {
-                $members = [];
-                foreach ($elements as $member => $score) {
-                    $members[] = $member;
-                }
-                return $members;
+                return array_keys($elements);
             }
         } elseif ($result->asMiss()) {
             return [];
@@ -2218,7 +2214,56 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
      */
     public function zRevRangeByScore(string $key, string $max, string $min, array|bool $options = []): Redis|array|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $withScores = false;
+        $limitStart = null;
+        $limitCount = null;
+
+        if (is_array($options)) {
+            $options = array_change_key_case($options, CASE_LOWER);
+            if ((isset($options['withscores']) && $options['withscores'] === true)) {
+                $withScores = true;
+            }
+
+            if (isset($options['limit'])) {
+                [$limitStart, $limitCount] = $options['limit'];
+            }
+        } elseif ($options === true) {
+            $withScores = true;
+        }
+
+        try {
+            $minRangeValue = RangeValue::parse($min);
+            $maxRangeValue = RangeValue::parse($max);
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
+
+        $result = $this->client->sortedSetFetchByScore(
+            $this->cacheName,
+            $key,
+            $minRangeValue->isFinite() ? $minRangeValue->getValue() : null,
+            $minRangeValue->isInclusive(),
+            $maxRangeValue->isFinite() ? $maxRangeValue->getValue() : null,
+            $maxRangeValue->isInclusive(),
+            SORT_DESC,
+            $limitStart,
+            $limitCount
+        );
+
+        if ($result->asHit()) {
+            $elements = $result->asHit()->valuesArray();
+            if ($withScores) {
+                return $elements;
+            } else {
+                return array_keys($elements);
+            }
+        } elseif ($result->asMiss()) {
+            return [];
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
+        }
     }
 
     /**
