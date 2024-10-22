@@ -1002,12 +1002,10 @@ class MomentoRedisClientTest extends TestCase
         $this->assertEquals($expected, $storedValues, "The stored result in $dst should match the expected min values.");
     }
 
-    public function testZunionstore_WithInvalidWeights_ShouldThrowException(): void
+    public function testZunionstore_WithInvalidWeights_ShouldReturnFalse(): void
     {
-        if (self::$isRedisBackendTest) {
-            $this->markTestSkipped("This test is only for Momento client");
-        }
-        $this->expectException(\InvalidArgumentException::class);
+        // Temporarily suppress warnings for this test: needed to suppress warnings on redis test
+        $originalErrorReporting = error_reporting(E_ALL & ~E_WARNING);
 
         $key1 = uniqid();
         $key2 = uniqid();
@@ -1018,16 +1016,17 @@ class MomentoRedisClientTest extends TestCase
         self::$client->zAdd($key2, 2.0, 'b');
 
         // Attempt zunionstore with invalid weights (mismatched count)
-        self::$client->zunionstore($dst, [$key1, $key2], [1.0]);
+        $result = self::$client->zunionstore($dst, [$key1, $key2], [1.0]);
+        $this->assertFalse($result);
+
+        // Restore the original error reporting level
+        error_reporting($originalErrorReporting);
     }
 
-    public function testZunionstore_WithInvalidAggregate_ShouldThrowException(): void
+    public function testZunionstore_WithInvalidAggregate_ShouldReturnFalse(): void
     {
-        if (self::$isRedisBackendTest) {
-            $this->markTestSkipped("This test is only for Momento client");
-        }
-
-        $this->expectException(\InvalidArgumentException::class);
+        // Temporarily suppress warnings for this test: needed to suppress warnings on redis test
+        $originalErrorReporting = error_reporting(E_ALL & ~E_WARNING);
 
         $key1 = uniqid();
         $key2 = uniqid();
@@ -1038,7 +1037,12 @@ class MomentoRedisClientTest extends TestCase
         self::$client->zAdd($key2, 2.0, 'b');
 
         // Attempt zunionstore with an invalid aggregate function
-        self::$client->zunionstore($dst, [$key1, $key2], null, 'invalid_aggregate');
+        $result = self::$client->zunionstore($dst, [$key1, $key2], null, 'invalid_aggregate');
+        $this->assertFalse($result);
+
+
+        // Restore the original error reporting level
+        error_reporting($originalErrorReporting);
     }
 
     public function testZunionstore_WithEmptySortedSets_ShouldReturnZero(): void

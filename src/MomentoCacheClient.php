@@ -2305,9 +2305,13 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 
     public function zunionstore(string $dst, array $keys, ?array $weights = null, ?string $aggregate = null): Redis|int|false
     {
-        // In phpredis, improper weights or aggregate results in a runtime exception.
-        $weights = ZunionstoreOptionsHelper::validateAndPrepareWeights($weights, count($keys));
-        $aggregate = ZunionstoreOptionsHelper::validateAndPrepareAggregate($aggregate);
+        // In phpredis, improper weights or aggregate results in a runtime warning and returning false.
+        try {
+            $weights = ZunionstoreOptionsHelper::validateAndPrepareWeights($weights, count($keys));
+            $aggregate = ZunionstoreOptionsHelper::validateAndPrepareAggregate($aggregate);
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
 
         // Perform asynchronous fetches from each sorted set
         $futures = [];
