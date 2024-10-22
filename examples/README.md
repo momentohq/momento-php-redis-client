@@ -36,13 +36,13 @@ Run the examples:
 - basic Example:
 
 ```bash
-php examples/basic.php
+php basic.php
 ```
 
 - Sorted Set Example:
 
 ```bash
-php examples/sorted_set.php
+php sorted_set.php
 ```
 
 ## Using the SDK in your project
