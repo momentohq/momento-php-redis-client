@@ -1,5 +1,5 @@
 {
-  "name": "momentohq/php-redis-client",
+  "name": "momentohq/momento-php-redis-client",
   "description": "Momento Wrapper for phpredis",
   "type": "library",
   "license": "Apache-2.0",
