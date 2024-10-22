@@ -1,6 +1,8 @@
-# Welcome to Momento php-redis drop-in replacement
+# Momento Drop-in Replacement for PhpRedis
 
-Welcome to the Momento PHP-Redis Drop-in Replacement package! This package is a wrapper around the PHP-Redis extension that allows integration with Momento's caching service. You can use this as a direct replacement for PHP-Redis, while leveraging the benefits of Momento's serverless cache.
+Welcome to the Momento Drop-in Replacement for PhpRedis! This package is a wrapper around the PhpRedis extension that allows integration with Momento cache. You can use this as a direct replacement for PhpRedis, while leveraging the benefits of Momento serverless cache.
+
+This product includes PHP software, freely available from <http://www.php.net/software/>.
 
 ## Pre-requisites
 
@@ -18,7 +20,7 @@ TEST_CACHE_NAME="test-cache" # Cache name
 
 To set up the integration tests, you'll need two Docker containers: one for running Redis and the other for running the integration tests.
 
-### Step 1: Set Up Redis Docker Container
+### Step 1: Set Up a Redis Docker Container
 
 - Run the following command to start a Redis container:
 
