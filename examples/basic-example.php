@@ -13,7 +13,7 @@ require "vendor/autoload.php";
 $CACHE_NAME = uniqid("php-example-");
 $ITEM_DEFAULT_TTL_SECONDS = 60;
 $KEY = uniqid("myKey-");
-$VALUE = 2;
+$VALUE = uniqid("myValue-");
 
 // Setup MomentoCacheClient
 $authProvider = CredentialProvider::fromEnvironmentVariable("MOMENTO_API_KEY");
@@ -30,7 +30,7 @@ function printBanner(string $message, LoggerInterface $logger): void
     $logger->info($line);
 }
 
-printBanner("*                      Momento Increment Example Start                     *", $logger);
+printBanner("*                      Momento PhpRedis Client Basic Example Start                     *", $logger);
 
 // Ensure test cache exists
 $response = $client->createCache($CACHE_NAME);
@@ -53,14 +53,23 @@ try {
     exit(1);
 }
 
-// Increment key using MomentoCacheClient
-$logger->info("Incrementing key: $KEY\n");
-$incrementAmount = 1;
+// Get key using MomentoCacheClient
+$logger->info("Getting key: $KEY\n");
 try {
-    $incrementResponse = $momentoCacheClient->incrBy($KEY, $incrementAmount);
-    $logger->info("Incremented key: $KEY by $incrementAmount. New value: " . $incrementResponse . "\n");
+    $getResponse = $momentoCacheClient->get($KEY);
+    $logger->info("Got key: $KEY with value: " . $getResponse . "\n");
 } catch (Exception $e) {
-    $logger->info("Error incrementing key: $KEY\n");
+    $logger->info("Error getting key: $KEY\n");
+    exit(1);
+}
+
+// Delete key using MomentoCacheClient
+$logger->info("Deleting key: $KEY\n");
+try {
+    $deleteResponse = $momentoCacheClient->del($KEY);
+    $logger->info("Deleted key: $KEY\n");
+} catch (Exception $e) {
+    $logger->info("Error deleting key: $KEY\n");
     exit(1);
 }
 
@@ -73,4 +82,4 @@ if ($response->asSuccess()) {
     exit(1);
 }
 
-printBanner("*                      Momento Increment Example End                     *", $logger);
+printBanner("*                      Momento PhpRedis Client Example End                     *", $logger);

@@ -30,7 +30,7 @@ function printBanner(string $message, LoggerInterface $logger): void
     $logger->info($line);
 }
 
-printBanner("*                      Momento SortedSet Example Start                     *", $logger);
+printBanner("*                      Momento PhpRedis Client SortedSet Example Start                     *", $logger);
 
 // Ensure test cache exists
 $response = $client->createCache($CACHE_NAME);
@@ -204,4 +204,4 @@ if ($response->asSuccess()) {
     exit(1);
 }
 
-printBanner("*                      Momento SortedSet Example End                     *", $logger);
+printBanner("*                      Momento PhpRedis Client SortedSet Example End                     *", $logger);
