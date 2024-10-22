@@ -897,6 +897,172 @@ class MomentoRedisClientTest extends TestCase
         $this->assertEquals($score, $result, "Retrieved score does not match the expected score");
     }
 
+    public function testZunionstore_WithDefaultWeightsAndSumAggregation(): void
+    {
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a', 2.0, 'b');
+        self::$client->zAdd($key2, 2.0, 'a', 3.0, 'c');
+
+        // Perform zunionstore with default weights and sum aggregation
+        $result = self::$client->zunionstore($dst, [$key1, $key2]);
+
+        // Validate result count
+        $this->assertEquals(3, $result, "zunionstore should return the correct count of unioned elements");
+
+        // Validate the content of the destination set
+        $storedValues = self::$client->zRevRange($dst, 0, -1, true);
+        $expected = [
+            'a' => 3.0,  // 1.0 from key1 and 2.0 from key2
+            'c' => 3.0,
+            'b' => 2.0,
+        ];
+        $this->assertEquals($expected, $storedValues, "The stored result in $dst should match the expected values.");
+    }
+
+    public function testZunionstore_WithProvidedWeightsAndSumAggregation(): void
+    {
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a', 2.0, 'b');
+        self::$client->zAdd($key2, 2.0, 'a', 3.0, 'c');
+
+        // Perform zunionstore with provided weights
+        $weights = [2.0, 3.0];  // Apply different weights to each sorted set
+        $result = self::$client->zunionstore($dst, [$key1, $key2], $weights);
+
+        // Validate result count
+        $this->assertEquals(3, $result, "zunionstore should return the correct count of unioned elements");
+
+        // Validate the content of the destination set
+        $storedValues = self::$client->zRevRange($dst, 0, -1, true);
+        $expected = [
+            'a' => 8.0,  // (1.0 * 2.0) from key1 + (2.0 * 3.0) from key2
+            'c' => 9.0,  // 3.0 from key2 * 3.0 weight
+            'b' => 4.0,  // 2.0 from key1 * 2.0 weight
+        ];
+        $this->assertEquals($expected, $storedValues, "The stored result in $dst should match the expected values.");
+    }
+
+    public function testZunionstore_WithMaxAggregation(): void
+    {
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a', 2.0, 'b');
+        self::$client->zAdd($key2, 2.0, 'a', 3.0, 'b', 4.0, 'c');
+
+        // Perform zunionstore with max aggregation
+        $result = self::$client->zunionstore($dst, [$key1, $key2], null, 'max');
+
+        // Validate result count
+        $this->assertEquals(3, $result, "zunionstore should return the correct count of unioned elements");
+
+        // Validate the content of the destination set
+        $storedValues = self::$client->zRevRange($dst, 0, -1, true);
+        $expected = [
+            'c' => 4.0,
+            'b' => 3.0,  // max(2.0 from key1, 3.0 from key2)
+            'a' => 2.0,  // max(1.0 from key1, 2.0 from key2)
+        ];
+        $this->assertEquals($expected, $storedValues, "The stored result in $dst should match the expected max values.");
+    }
+
+    public function testZunionstore_WithMinAggregation(): void
+    {
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a', 2.0, 'b');
+        self::$client->zAdd($key2, 2.0, 'a', 3.0, 'b', 4.0, 'c');
+
+        // Perform zunionstore with min aggregation
+        $result = self::$client->zunionstore($dst, [$key1, $key2], null, 'min');
+
+        // Validate result count
+        $this->assertEquals(3, $result, "zunionstore should return the correct count of unioned elements");
+
+        // Validate the content of the destination set
+        $storedValues = self::$client->zRevRange($dst, 0, -1, true);
+        $expected = [
+            'c' => 4.0,  // No other value to compare to
+            'b' => 2.0,  // min(2.0 from key1, 3.0 from key2)
+            'a' => 1.0,  // min(1.0 from key1, 2.0 from key2)
+        ];
+        $this->assertEquals($expected, $storedValues, "The stored result in $dst should match the expected min values.");
+    }
+
+    public function testZunionstore_WithInvalidWeights_ShouldReturnFalse(): void
+    {
+        // Temporarily suppress warnings for this test: needed to suppress warnings on redis test
+        $originalErrorReporting = error_reporting(E_ALL & ~E_WARNING);
+
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a');
+        self::$client->zAdd($key2, 2.0, 'b');
+
+        // Attempt zunionstore with invalid weights (mismatched count)
+        $result = self::$client->zunionstore($dst, [$key1, $key2], [1.0]);
+        $this->assertFalse($result);
+
+        // Restore the original error reporting level
+        error_reporting($originalErrorReporting);
+    }
+
+    public function testZunionstore_WithInvalidAggregate_ShouldReturnFalse(): void
+    {
+        // Temporarily suppress warnings for this test: needed to suppress warnings on redis test
+        $originalErrorReporting = error_reporting(E_ALL & ~E_WARNING);
+
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // Set up sorted sets
+        self::$client->zAdd($key1, 1.0, 'a');
+        self::$client->zAdd($key2, 2.0, 'b');
+
+        // Attempt zunionstore with an invalid aggregate function
+        $result = self::$client->zunionstore($dst, [$key1, $key2], null, 'invalid_aggregate');
+        $this->assertFalse($result);
+
+
+        // Restore the original error reporting level
+        error_reporting($originalErrorReporting);
+    }
+
+    public function testZunionstore_WithEmptySortedSets_ShouldReturnZero(): void
+    {
+        $key1 = uniqid();
+        $key2 = uniqid();
+        $dst = uniqid();
+
+        // No elements added to sorted sets
+
+        // Perform zunionstore on empty sets
+        $result = self::$client->zunionstore($dst, [$key1, $key2]);
+
+        $this->assertEquals(0, $result, "zunionstore should return 0 when no elements are present in the union.");
+
+        // Validate that the destination set is empty
+        $storedValues = self::$client->zRevRange($dst, 0, -1, true);
+        $this->assertEmpty($storedValues, "Destination set should be empty.");
+    }
+
     /**
      * @throws RedisException
      */

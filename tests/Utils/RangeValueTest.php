@@ -2,12 +2,8 @@
 
 namespace Utils;
 
-use Momento\Cache\Errors\InvalidArgumentError;
-use Momento\Cache\Errors\NotImplementedException;
-use Momento\Cache\MomentoCacheClient;
 use Momento\Cache\Utils\RangeValue;
 use PHPUnit\Framework\TestCase;
-use SetupIntegrationTest;
 
 class RangeValueTest extends TestCase
 {

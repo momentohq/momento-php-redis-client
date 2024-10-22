@@ -20,4 +20,5 @@ interface IMomentoRedisClient
     public function zRevRange(string $key, int $start, int $end, mixed $scores = null): Redis|array|false;
     public function zRevRangeByScore(string $key, string $min, string $max, array|bool $options = []): Redis|array|false;
     public function zScore(string $key, mixed $member): Redis|float|false;
+    public function zunionstore(string $dst, array $keys, ?array $weights = null, ?string $aggregate = null): Redis|int|false;
 }
