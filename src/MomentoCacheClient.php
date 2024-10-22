@@ -6,6 +6,7 @@ use Exception;
 use InvalidArgumentException;
 use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
 use Momento\Cache\Utils\RangeValue;
+use Momento\Cache\Utils\ZunionstoreOptionsHelper;
 use Redis;
 
 class MomentoCacheClient extends Redis implements IMomentoRedisClient
@@ -2302,12 +2303,62 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
-    /**
-     * @throws Exception
-     */
     public function zunionstore(string $dst, array $keys, ?array $weights = null, ?string $aggregate = null): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        // In phpredis, improper weights or aggregate results in a runtime exception.
+        $weights = ZunionstoreOptionsHelper::validateAndPrepareWeights($weights, count($keys));
+        $aggregate = ZunionstoreOptionsHelper::validateAndPrepareAggregate($aggregate);
+
+        // Perform asynchronous fetches from each sorted set
+        $futures = [];
+        foreach ($keys as $key) {
+            $futures[] = $this->client->sortedSetFetchByScoreAsync($this->cacheName, $key);
+        }
+
+        // Wait for all the asynchronous fetches to complete
+        $results = [];
+        foreach ($futures as $future) {
+            $response = $future->wait();
+            if ($response->asHit()) {
+                $results[] = $response->asHit()->valuesArray();
+            } elseif ($response->asMiss()) {
+                $results[] = [];
+            } elseif ($response->asError()) {
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($response);
+            } else {
+                return false;
+            }
+        }
+
+        // Aggregate the fetched results
+        $union = [];
+        foreach ($results as $index => $set) {
+            $weight = $weights[$index];
+            foreach ($set as $member => $score) {
+                if (!isset($union[$member])) {
+                    $union[$member] = $weight * $score;
+                } else {
+                    $weightedScore = $weight * $score;
+                    if ($aggregate === ZunionstoreOptionsHelper::AGGREGATE_SUM) {
+                        $union[$member] += $weightedScore;
+                    } elseif ($aggregate === ZunionstoreOptionsHelper::AGGREGATE_MIN) {
+                        $union[$member] = min($union[$member], $weightedScore);
+                    } elseif ($aggregate === ZunionstoreOptionsHelper::AGGREGATE_MAX) {
+                        $union[$member] = max($union[$member], $weightedScore);
+                    }
+                }
+            }
+        }
+
+        // Store the result in the destination set
+        $putResponse = $this->client->sortedSetPutElements($this->cacheName, $dst, $union);
+        if ($putResponse->asSuccess()) {
+            return count($union);
+        } elseif ($putResponse->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($putResponse);
+        } else {
+            return false;
+        }
     }
 
     private function extractElementsFromOptions(array $score_or_options): array

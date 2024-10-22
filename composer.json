@@ -48,6 +48,6 @@
   "scripts": {
     "lint": "phpcs -s --standard=phpcs.xml src/",
     "lint-fix": "phpcbf --standard=phpcs.xml src/",
-    "test": "./vendor/bin/phpunit tests/MomentoRedisClientTest.php"
+    "test": "./vendor/bin/phpunit tests"
   }
 }
