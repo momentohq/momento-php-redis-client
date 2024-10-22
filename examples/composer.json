@@ -6,7 +6,7 @@
         }
     ],
     "require": {
-        "momentohq/php-redis-client": "dev-main",
+        "momentohq/momento-php-redis-client": "dev-main",
         "monolog/monolog": "^3.7"
     },
     "minimum-stability": "dev"
