@@ -23,6 +23,10 @@ $logger = $configuration->getLoggerFactory()->getLogger("ex:");
 // Create a Redis client backed by Momento cache client over the cache
 $momentoCacheClient = new MomentoCacheClient($client, $CACHE_NAME);
 
+// IMPORTANT: The example assumes that the cache ($CACHE_NAME) is already created.
+// To create a cache, you can use the Momento Console (https://console.gomomento.com/) or SDK methods.
+// Refer to the documentation (https://docs.momentohq.com/platform/sdks/php/cache) for details.
+
 // Perform operations vs Momento as if using a regular Redis client
 $setResult = $momentoCacheClient->set($KEY, $VALUE);
 $logger->info("Set result: " . $setResult . "\n");
