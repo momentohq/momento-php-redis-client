@@ -1984,7 +1984,6 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         }
     }
 
-
     /**
      * @throws Exception
      */

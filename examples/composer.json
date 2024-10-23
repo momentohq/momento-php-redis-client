@@ -1,0 +1,13 @@
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/momentohq/momento-php-redis-client"
+        }
+    ],
+    "require": {
+        "momentohq/momento-php-redis-client": "dev-main",
+        "monolog/monolog": "^3.7"
+    },
+    "minimum-stability": "dev"
+}

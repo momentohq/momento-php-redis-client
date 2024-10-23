@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78012dbb009782c5422c82cb4b7e69aa",
+    "content-hash": "0acdb5c89c8c7206e28c2429aad9f8ba",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -181,12 +181,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/momentohq/client-sdk-php.git",
-                "reference": "a8cfed84a6c56ae647edaa74d7a326efea202912"
+                "reference": "6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/a8cfed84a6c56ae647edaa74d7a326efea202912",
-                "reference": "a8cfed84a6c56ae647edaa74d7a326efea202912",
+                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe",
+                "reference": "6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe",
                 "shasum": ""
             },
             "require": {
@@ -252,7 +252,7 @@
                 "issues": "https://github.com/momentohq/client-sdk-php/issues",
                 "source": "https://github.com/momentohq/client-sdk-php"
             },
-            "time": "2024-10-21T21:52:05+00:00"
+            "time": "2024-10-21T22:41:24+00:00"
         },
         {
             "name": "phpoption/phpoption",
