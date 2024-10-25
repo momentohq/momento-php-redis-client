@@ -1,58 +1,77 @@
+<img src="https://docs.momentohq.com/img/momento-logo-forest.svg" alt="logo" width="400"/>
+
+[![project status](https://momentohq.github.io/standards-and-practices/badges/project-status-official.svg)](https://github.com/momentohq/standards-and-practices/blob/main/docs/momento-on-github.md)
+[![project stability](https://momentohq.github.io/standards-and-practices/badges/project-stability-beta.svg)](https://github.com/momentohq/standards-and-practices/blob/main/docs/momento-on-github.md)
+
+
 # Momento Drop-in Replacement for PhpRedis
 
-Welcome to the Momento Drop-in Replacement for PhpRedis! This package is a wrapper around the PhpRedis extension that allows integration with Momento cache. You can use this as a direct replacement for PhpRedis, while leveraging the benefits of Momento serverless cache.
+Welcome to the Momento Drop-in Replacement for [PhpRedis](https://github.com/phpredis/phpredis)! This package is a
+wrapper around the PhpRedis extension that allows integration with Momento cache. You can use this as a direct
+replacement for PhpRedis, while leveraging the benefits of Momento serverless cache.
 
-This product includes PHP software, freely available from <http://www.php.net/software/>.
+## Usage
 
-## Pre-requisites
+```php
+<?php
+declare(strict_types=1);
 
-Before running the integration tests, ensure that the Momento API Key is available in your environment. If you don't have one, you can get it from the  [Momento Console](https://console.gomomento.com).
-Additionally, create a .env file at the root of the project with the following contents:
+use Momento\Auth\CredentialProvider;
+use Momento\Cache\CacheClient;
+use Momento\Cache\MomentoCacheClient;
+use Momento\Config\Configurations\Laptop;
+use Momento\Logging\StderrLoggerFactory;
 
-```bash
-TEST_REDIS=true # false if you would like to use momento
-REDIS_HOST=<REDIS_HOST> # Redis host, default is "127.0.0.1"
-REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
-TEST_CACHE_NAME="test-cache" # Cache name
+require "vendor/autoload.php";
+
+$CACHE_NAME = uniqid("php-example-");
+$ITEM_DEFAULT_TTL_SECONDS = 60;
+$KEY = uniqid("myKey-");
+$VALUE = uniqid("myValue-");
+
+// Create a Momento cache client
+$authProvider = CredentialProvider::fromEnvironmentVariable("MOMENTO_API_KEY");
+$configuration = Laptop::latest(new StderrLoggerFactory());
+$client = new CacheClient($configuration, $authProvider, $ITEM_DEFAULT_TTL_SECONDS);
+$logger = $configuration->getLoggerFactory()->getLogger("ex:");
+
+// Create a Redis client backed by Momento cache client over the cache
+$momentoCacheClient = new MomentoCacheClient($client, $CACHE_NAME);
+
+// IMPORTANT: The example assumes that the cache ($CACHE_NAME) is already created.
+// To create a cache, you can use the Momento Console (https://console.gomomento.com/) or SDK methods.
+// Refer to the documentation (https://docs.momentohq.com/platform/sdks/php/cache) for details.
+
+// Perform operations vs Momento as if using a regular Redis client
+$setResult = $momentoCacheClient->set($KEY, $VALUE);
+$logger->info("Set result: " . $setResult . "\n");
+
+$getResult = $momentoCacheClient->get($KEY);
+$logger->info("Get result: " . $getResult . "\n");
+
 ```
+
+## Getting Started and Documentation
+
+To get started with the drop-in client, you will need a Momento API key. You can get one from the
+[Momento Console](https://console.gomomento.com).
 
 ## Installation
 
-To set up the integration tests, you'll need two Docker containers: one for running Redis and the other for running the integration tests.
+TODO: fill in section
 
-### Step 1: Set Up a Redis Docker Container
+## Examples
 
-- Run the following command to start a Redis container:
+Working example projects, with all required build configuration files, are available
+[in the examples directory](./examples/).
 
-```bash
-docker run -it --name my-redis -d -p 6379:6379 redis
-```
+## Developing
 
-- Retrieve the IP address of the Redis container:
+If you are interested in contributing to the SDK, please see the [CONTRIBUTING](./CONTRIBUTING.md) docs.
 
-```bash
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-redis
-```
+## Attributions
 
-- Update the `REDIS_HOST` field in your `.env` file with the Redis container's IP address.
+This product includes PHP software, freely available from <http://www.php.net/software/>
 
-### Step 2: Build and Run the Integration Test Docker Container
-
-- Build the Docker image for running the integration tests using the provided script:
-
-```bash
-./dev-docker-build.sh
-```
-
-- Run the Docker container for integration tests:
-
-```bash
-docker run -it -v $(pwd):/app -w /app momento-php-redis-dev /bin/bash
-```
-
-- Inside the Docker container, execute the integration tests:
-    
-```bash
-composer install
-composer test
-```
+----------------------------------------------------------------------------------------
+For more info, visit our website at [https://gomomento.com](https://gomomento.com)!
