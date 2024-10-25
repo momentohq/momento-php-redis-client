@@ -1,4 +1,4 @@
-## Pre-requisites
+# Pre-requisites
 
 Before running the integration tests, ensure that the Momento API Key is available in your environment. If you don't
 have one, you can get it from the  [Momento Console](https://console.gomomento.com). Add the following environment variables:
@@ -11,11 +11,11 @@ export REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
 export TEST_CACHE_NAME="test-cache" # Cache name
 ```
 
-## Installation
+# Installation
 
 To set up the integration tests, you'll need two Docker containers: one for running Redis and the other for running the integration tests.
 
-### Step 1: Set Up a Redis Docker Container
+## Step 1: Set Up a Redis Docker Container
 
 - Run the following command to start a Redis container:
 
@@ -31,7 +31,7 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-r
 
 - Update the `REDIS_HOST` field in your `.env` file with the Redis container's IP address.
 
-### Step 2: Build and Run the Integration Test Docker Container
+## Step 2: Build and Run the Integration Test Docker Container
 
 - Build the Docker image for running the integration tests using the provided script:
 
