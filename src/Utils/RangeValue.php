@@ -98,6 +98,15 @@ class RangeValue
     }
 
     /**
+     * Get the value if it is finite, or null if it is infinite.
+     * @return float|int|null The value if it is finite, or null if it is infinite.
+     */
+    public function getValueIfFiniteOrNull(): float|int|null
+    {
+        return $this->isFinite() ? $this->value : null;
+    }
+
+    /**
      * Parse an input value to create a RangeValue object.
      *
      * The input can be an integer, float, or string. If the input is a numeric value,
