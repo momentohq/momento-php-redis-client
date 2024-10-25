@@ -12,11 +12,13 @@ class RangeValueTest extends TestCase
         // Test inclusive integer parsing
         $rangeValue = RangeValue::parse(5);
         $this->assertEquals(5, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isFinite());
 
         $rangeValue = RangeValue::parse(-1);
         $this->assertEquals(-1, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isFinite());
     }
@@ -26,10 +28,12 @@ class RangeValueTest extends TestCase
         // Test inclusive float parsing
         $rangeValue = RangeValue::parse(5.75);
         $this->assertEquals(5.75, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
 
         $rangeValue = RangeValue::parse(-1.25);
         $this->assertEquals(-1.25, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
     }
 
@@ -38,10 +42,12 @@ class RangeValueTest extends TestCase
         // Test string-based integer parsing
         $rangeValue = RangeValue::parse("5");
         $this->assertEquals(5, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
 
         $rangeValue = RangeValue::parse("-1");
         $this->assertEquals(-1, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
     }
 
@@ -50,10 +56,12 @@ class RangeValueTest extends TestCase
         // Test string-based float parsing
         $rangeValue = RangeValue::parse("5.75");
         $this->assertEquals(5.75, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
 
         $rangeValue = RangeValue::parse("-1.25");
         $this->assertEquals(-1.25, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertTrue($rangeValue->isInclusive());
     }
 
@@ -62,10 +70,12 @@ class RangeValueTest extends TestCase
         // Test exclusive integer parsing from string
         $rangeValue = RangeValue::parse("(5");
         $this->assertEquals(5, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
 
         $rangeValue = RangeValue::parse("(-1");
         $this->assertEquals(-1, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
     }
 
@@ -74,10 +84,12 @@ class RangeValueTest extends TestCase
         // Test exclusive float parsing from string
         $rangeValue = RangeValue::parse("(5.75");
         $this->assertEquals(5.75, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
 
         $rangeValue = RangeValue::parse("(-1.25");
         $this->assertEquals(-1.25, $rangeValue->getValue());
+        $this->assertEquals($rangeValue->getValue(), $rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
     }
 
@@ -86,12 +98,14 @@ class RangeValueTest extends TestCase
         // Test positive infinity
         $rangeValue = RangeValue::parse("+inf");
         $this->assertEquals("+inf", $rangeValue->getValue());
+        $this->assertNull($rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isPositiveInfinity());
         $this->assertFalse($rangeValue->isFinite());
 
         $rangeValue = RangeValue::parse("+INF");
         $this->assertEquals("+inf", $rangeValue->getValue());
+        $this->assertNull($rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isPositiveInfinity());
         $this->assertFalse($rangeValue->isFinite());
@@ -102,11 +116,13 @@ class RangeValueTest extends TestCase
         // Test negative infinity
         $rangeValue = RangeValue::parse("-inf");
         $this->assertEquals("-inf", $rangeValue->getValue());
+        $this->assertNull($rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isNegativeInfinity());
 
         $rangeValue = RangeValue::parse("-INF");
         $this->assertEquals("-inf", $rangeValue->getValue());
+        $this->assertNull($rangeValue->getValueIfFiniteOrNull());
         $this->assertFalse($rangeValue->isInclusive());
         $this->assertTrue($rangeValue->isNegativeInfinity());
     }

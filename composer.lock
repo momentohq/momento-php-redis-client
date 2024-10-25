@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0acdb5c89c8c7206e28c2429aad9f8ba",
+    "content-hash": "7b1573e9fcad0c8f15656e2c0fbf1520",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -177,16 +177,16 @@
         },
         {
             "name": "momentohq/client-sdk-php",
-            "version": "dev-main",
+            "version": "v1.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/momentohq/client-sdk-php.git",
-                "reference": "6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe"
+                "reference": "4985fede7e09415beaaa7f633c3de6b2b0d85b4c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe",
-                "reference": "6e2163625c0e2ce8a3ed6f6ff51d0382e053c2fe",
+                "url": "https://api.github.com/repos/momentohq/client-sdk-php/zipball/4985fede7e09415beaaa7f633c3de6b2b0d85b4c",
+                "reference": "4985fede7e09415beaaa7f633c3de6b2b0d85b4c",
                 "shasum": ""
             },
             "require": {
@@ -203,7 +203,6 @@
                 "friendsofphp/php-cs-fixer": "3.64.0",
                 "phpunit/phpunit": "^9.5.23"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -252,7 +251,7 @@
                 "issues": "https://github.com/momentohq/client-sdk-php/issues",
                 "source": "https://github.com/momentohq/client-sdk-php"
             },
-            "time": "2024-10-21T22:41:24+00:00"
+            "time": "2024-10-25T17:20:04+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -8950,15 +8949,13 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "momentohq/client-sdk-php": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "ext-redis": "*"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "8.0.2"
     },

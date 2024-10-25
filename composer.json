@@ -22,9 +22,9 @@
     "source": "https://github.com/momentohq/momento-php-redis-client"
   },
   "require": {
-    "momentohq/client-sdk-php": "dev-main",
     "vlucas/phpdotenv": "^5.6",
-    "ext-redis": "*"
+    "ext-redis": "*",
+    "momentohq/client-sdk-php": "^1.14"
   },
   "require-dev": {
     "orchestra/testbench": "^7.11",
