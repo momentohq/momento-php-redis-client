@@ -28,11 +28,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Commit lint and Other Shared Build Steps
-        uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set cache key
         id: cache-key
         run: echo "key=php-${{ env.php-version }}" >> $GITHUB_OUTPUT
