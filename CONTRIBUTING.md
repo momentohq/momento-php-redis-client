@@ -1,14 +1,14 @@
 ## Pre-requisites
 
 Before running the integration tests, ensure that the Momento API Key is available in your environment. If you don't
-have one, you can get it from the  [Momento Console](https://console.gomomento.com). Additionally, create a .env file at the root of the project
-with the following contents:
+have one, you can get it from the  [Momento Console](https://console.gomomento.com). Add the following environment variables:
 
 ```bash
-TEST_REDIS=true # false if you would like to use momento
-REDIS_HOST=<REDIS_HOST> # Redis host, default is "127.0.0.1"
-REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
-TEST_CACHE_NAME="test-cache" # Cache name
+export MOMENTO_API_KEY=<YOUR_API_KEY> # Momento API Key
+export TEST_REDIS=true # false if you would like to use momento
+export REDIS_HOST=<REDIS_HOST> # Redis host, default is "127.0.0.1"
+export REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
+export TEST_CACHE_NAME="test-cache" # Cache name
 ```
 
 ## Installation
