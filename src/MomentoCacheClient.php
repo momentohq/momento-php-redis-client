@@ -2004,11 +2004,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             return false;
         }
 
-        $startValueForMomento = $startRangeValue->isFinite() ? $startRangeValue->getValue() : null;
-        $endValueForMomento = $endRangeValue->isFinite() ? $endRangeValue->getValue() : null;
         $result = $this->client->sortedSetLengthByScore(
             $this->cacheName, $key,
-            $startValueForMomento, $endValueForMomento,
+            $startRangeValue->getValueIfFiniteOrNull(), $endRangeValue->getValueIfFiniteOrNull(),
             $startRangeValue->isInclusive(), $endRangeValue->isInclusive());
         if ($result->asHit()) {
             return $result->asHit()->length();
@@ -2241,8 +2239,8 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->sortedSetFetchByScore(
             $this->cacheName,
             $key,
-            $minRangeValue->isFinite() ? $minRangeValue->getValue() : null,
-            $maxRangeValue->isFinite() ? $maxRangeValue->getValue() : null,
+            $minRangeValue->getValueIfFiniteOrNull(),
+            $maxRangeValue->getValueIfFiniteOrNull(),
             $minRangeValue->isInclusive(),
             $maxRangeValue->isInclusive(),
             SORT_DESC,
