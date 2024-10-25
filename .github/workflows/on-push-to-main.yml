@@ -2,7 +2,7 @@ name: On push to main
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   generate-readme:
@@ -109,6 +109,10 @@ jobs:
       - name: Run tests with Redis backend
         run: make test-redis
 
+  release:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
       - uses: google-github-actions/release-please-action@v3
         name: Release Please
         id: release
