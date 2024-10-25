@@ -15,6 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify README generation
+        uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: beta
+          project_type: other
+
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
         env:
