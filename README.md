@@ -58,7 +58,7 @@ To get started with the drop-in client, you will need a Momento API key. You can
 
 ## Installation
 
-TODO: fill in section
+The Momento Drop-in Replacement for [Phpredis](https://github.com/phpredis/phpredis) is available on packagist.org: [momento-php-redis](https://packagist.org/packages/momentohq/momento-php-redis-client)
 
 ## Examples
 
