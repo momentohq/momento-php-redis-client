@@ -1,6 +1,6 @@
 {
   "name": "momentohq/momento-php-redis-client",
-  "description": "Momento drop-in replacement for phpredis: A seamless drop-in replacement for phpredis, built with the Momento SDK for PHP. It mirrors the phpredis interface while leveraging Momento’s serverless cache for effortless scalability and zero operational overhead. Simply swap in for phpredis to enhance performance without changing your code.",
+  "description": "Momento drop-in replacement for phpredis: A seamless drop-in replacement for phpredis, built with the Momento SDK for PHP. It mirrors the phpredis interface while leveraging Momento’s serverless cache for effortless scalability and zero operational overhead.",
   "type": "library",
   "license": "Apache-2.0",
   "keywords": [
