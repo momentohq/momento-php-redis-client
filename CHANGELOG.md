@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.1](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.0...v0.1.1) (2024-10-28)
+
+
+### Miscellaneous
+
+* add licence file ([#32](https://github.com/momentohq/momento-php-redis-client/issues/32)) ([0534ef8](https://github.com/momentohq/momento-php-redis-client/commit/0534ef87f634df2ddcf8724bd897d3081e1fa5f6))
+* add translation for README ([#33](https://github.com/momentohq/momento-php-redis-client/issues/33)) ([3408b9b](https://github.com/momentohq/momento-php-redis-client/commit/3408b9bec3e2a290a0d2d463eaf6c2464a1b47f6))
+* trim composer package description ([#34](https://github.com/momentohq/momento-php-redis-client/issues/34)) ([c85d466](https://github.com/momentohq/momento-php-redis-client/commit/c85d466df564fc6448eb478f566f791a743ba884))
+* update client version in examples ([#29](https://github.com/momentohq/momento-php-redis-client/issues/29)) ([aeae6d1](https://github.com/momentohq/momento-php-redis-client/commit/aeae6d1b2d69e40251259ce1b2c6bce91a1c3c97))
+
 ## 0.1.0 (2024-10-25)
 
 
