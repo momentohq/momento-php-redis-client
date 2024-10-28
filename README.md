@@ -7,7 +7,7 @@
 # Momento Drop-in Replacement for PhpRedis
 
 Welcome to the Momento Drop-in Replacement for [PhpRedis](https://github.com/phpredis/phpredis)! This package is a
-wrapper around the PhpRedis extension that allows integration with Momento cache. You can use this as a direct
+wrapper around PhpRedis allowing for integration with Momento cache. You can use this as a direct
 replacement for PhpRedis, while leveraging the benefits of Momento serverless cache.
 
 ## Usage
