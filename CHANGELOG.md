@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.1...v0.1.2) (2024-10-28)
+
+
+### Miscellaneous
+
+* wordsmith readme ([#35](https://github.com/momentohq/momento-php-redis-client/issues/35)) ([8ca4359](https://github.com/momentohq/momento-php-redis-client/commit/8ca4359aee505f46c443bcb6411426c1f686f1cc))
+
 ## [0.1.1](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.0...v0.1.1) (2024-10-28)
 
 
