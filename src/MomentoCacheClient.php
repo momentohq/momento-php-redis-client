@@ -1252,12 +1252,16 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
-    /**
-     * @throws Exception
-     */
     public function pttl(string $key): Redis|int|false
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $result = $this->client->itemGetTtl($this->cacheName, $key);
+        if ($result->asHit()) {
+            return $result->asHit()->remainingTtlMillis();
+        } else if ($result->asMiss()) {
+            return -2;
+        } else {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        }
     }
 
     /**
@@ -1782,7 +1786,8 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     {
         $result = $this->client->itemGetTtl($this->cacheName, $key);
         if ($result->asHit()) {
-            return $result->asHit()->remainingTtlMillis();
+            $ttl_ms = $result->asHit()->remainingTtlMillis();
+            return $ttl_ms / 1000;
         } else if ($result->asMiss()) {
             return -2;
         } else {

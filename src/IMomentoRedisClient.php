@@ -13,6 +13,7 @@ interface IMomentoRedisClient
     public function set(string $key, string $value, mixed $options = null): mixed;
     public function setnx(string $key, mixed $value): Redis|bool;
     public function ttl(string $key): Redis|int|false;
+    public function pttl(string $key): Redis|int|false;
     public function zAdd(string $key, float|array $score_or_options, mixed ...$more_scores_and_mems): Redis|int|float|false;
     public function zCount(string $key, int|string $start, int|string $end): Redis|int|false;
     public function zIncrBy(string $key, float $value, mixed $member): Redis|float|false;
