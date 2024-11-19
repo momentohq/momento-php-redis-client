@@ -405,12 +405,19 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
-    /**
-     * @throws Exception
-     */
+
     public function exists(mixed $key, mixed ...$other_keys): Redis|int|bool
     {
-        throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
+        $keys = array_merge([$key], $other_keys);
+        $result = $this->client->keysExist($this->cacheName, $keys);
+        if ($result->asSuccess()) {
+            $resp = $result->asSuccess()->exists();
+            return array_sum($resp);
+        } elseif ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+        } else {
+            return false;
+        }
     }
 
     /**
