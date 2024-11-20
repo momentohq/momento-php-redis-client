@@ -323,9 +323,25 @@ class MomentoRedisClientTest extends TestCase
         $setResult = self::$client->set($key, $value, ['ex' => $ttlSeconds]);
         $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
 
-        $remainingTtlMillis = self::$client->ttl($key);
-        $this->assertGreaterThan(0, $remainingTtlMillis, "Expected TTL to be greater than 0");
-        $this->assertLessThanOrEqual($ttlSeconds * 1000, $remainingTtlMillis, "Expected TTL to be less than or equal to the set TTL");
+        $remainingTtlSeconds = self::$client->ttl($key);
+        $this->assertGreaterThan(0, $remainingTtlSeconds, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($ttlSeconds, $remainingTtlSeconds, "Expected TTL to be less than or equal to the set TTL");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testPttl(): void
+    {
+        $key = uniqid();
+        $value = uniqid();
+        $ttlInMillis = round(microtime(true) * 1000) + 5000;
+        $setResult = self::$client->set($key, $value, ['pxat' => $ttlInMillis]);
+        $this->assertEquals('OK', $setResult, "Failed to set the key-value pair");
+
+        $remainingTtlMilliseconds = self::$client->pttl($key);
+        $this->assertGreaterThan(0, $remainingTtlMilliseconds, "Expected TTL to be greater than 0");
+        $this->assertLessThanOrEqual($ttlInMillis, $remainingTtlMilliseconds, "Expected TTL to be less than or equal to the set TTL");
     }
 
     /**
