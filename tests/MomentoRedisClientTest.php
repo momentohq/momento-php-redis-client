@@ -1134,6 +1134,54 @@ class MomentoRedisClientTest extends TestCase
     }
 
     /**
+     * @throws RedisException
+     */
+    public function testExistsForSingleAndMultipleKeys(): void {
+        $key1 = uniqid();
+        $value1 = uniqid();
+        $key2 = uniqid();
+        $value2 = uniqid();
+        $key3 = uniqid();
+        $value3 = uniqid();
+
+        self::$client->set($key1, $value1);
+        self::$client->set($key2, $value2);
+        self::$client->set($key3, $value3);
+
+        $exists = self::$client->exists($key1);
+        $this->assertEquals(1, $exists, "Expected 1 for an existing key");
+
+        $exists = self::$client->exists($key1, $key2, $key3);
+        $this->assertEquals(3, $exists, "Expected 3 for an existing key");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExistsForMultipleKeysWithMissingKey(): void {
+        $key1 = uniqid();
+        $value1 = uniqid();
+        $key2 = uniqid();
+        $value2 = uniqid();
+        $key3 = uniqid();
+
+        self::$client->set($key1, $value1);
+        self::$client->set($key2, $value2);
+
+        $exists = self::$client->exists($key1, $key2, $key3);
+        $this->assertEquals(2, $exists, "Expected 2 for two existing keys");
+    }
+
+    /**
+     * @throws RedisException
+     */
+    public function testExistsOnNonExistingKey()
+    {
+        $exists = self::$client->exists(uniqid());
+        $this->assertEquals(0, $exists, "Expected 0 for a non-existent key");
+    }
+
+    /**
      * Tear down after all tests. This will clean up Redis or Momento resources.
      * @throws InvalidArgumentError | RedisException
      */
