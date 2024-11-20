@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.2...v0.2.0) (2024-11-20)
+
+
+### Features
+
+* add dev-container documentation ([#37](https://github.com/momentohq/momento-php-redis-client/issues/37)) ([0b44cfc](https://github.com/momentohq/momento-php-redis-client/commit/0b44cfcf998a45c54916d3a4153e888caae03c0e))
+* add exists method implementation ([#40](https://github.com/momentohq/momento-php-redis-client/issues/40)) ([0c77be1](https://github.com/momentohq/momento-php-redis-client/commit/0c77be1974365ef84ec6883f9d9a8e84d263d795))
+* add pttl and ttl(seconds) ([#41](https://github.com/momentohq/momento-php-redis-client/issues/41)) ([3dc1056](https://github.com/momentohq/momento-php-redis-client/commit/3dc10562da22dd6b34946f7de2f1fe927bda505c))
+
 ## [0.1.2](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.1...v0.1.2) (2024-10-28)
 
 
