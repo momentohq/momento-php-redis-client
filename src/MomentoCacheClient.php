@@ -353,7 +353,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     /**
      * @throws Exception
      */
-    public function dump(string $key): Redis|string
+    public function dump(string $key): Redis|string|false
     {
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
@@ -867,7 +867,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     /**
      * @throws Exception
      */
-    public function hRandField(string $key, ?array $options = null): Redis|string|array
+    public function hRandField(string $key, ?array $options = null): Redis|string|array|false
     {
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
@@ -1095,7 +1095,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     /**
      * @throws Exception
      */
-    public function mget(array $keys): Redis|array
+    public function mget(array $keys): Redis|array|false
     {
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
@@ -1459,7 +1459,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     /**
      * @throws Exception
      */
-    public function sRandMember(string $key, int $count = 0): array|Redis|string|false
+    public function sRandMember(string $key, int $count = 0): mixed
     {
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
