@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class MomentoRedisClientTest extends TestCase
 {
     private static Redis $client;
-    private static bool $isRedisBackendTest;
+    private static string $testBackend;
 
     /**
      * Setup cache client before each class.
@@ -18,7 +18,7 @@ class MomentoRedisClientTest extends TestCase
     {
         SetupIntegrationTest::setupIntegrationTest();
         self::$client = SetupIntegrationTest::getClient();
-        self::$isRedisBackendTest = SetupIntegrationTest::isRedisBackedTest();
+        self::$testBackend = SetupIntegrationTest::$testBackend;
     }
 
     /**
@@ -65,7 +65,7 @@ class MomentoRedisClientTest extends TestCase
         $nonExistentKey = uniqid();
         $deletedKey = self::$client->del($nonExistentKey);
 
-        if (self::$isRedisBackendTest) {
+        if (self::$testBackend == "redis") {
             $this->assertEquals(0, $deletedKey, "Expected 0 for a non-existent key");
         } else {
             $this->assertEquals(1, $deletedKey, "Expected 1 for a non-existent key");
@@ -814,7 +814,7 @@ class MomentoRedisClientTest extends TestCase
         $member = uniqid();
         $result = self::$client->zRem($key, $member);
 
-        if (self::$isRedisBackendTest) {
+        if (self::$testBackend === 'redis') {
             $this->assertEquals(0, $result, "Expected 0 for missing key");
         } else {
             $this->assertEquals(1, $result, "Expected 1 for missing key");
@@ -833,7 +833,7 @@ class MomentoRedisClientTest extends TestCase
 
         $missingMember = uniqid();
         $result = self::$client->zRem($key, $missingMember);
-        if (self::$isRedisBackendTest) {
+        if (self::$testBackend === 'redis') {
             $this->assertEquals(0, $result, "Expected 0 for missing member");
         } else {
             $this->assertEquals(1, $result, "Expected 1 for missing member");

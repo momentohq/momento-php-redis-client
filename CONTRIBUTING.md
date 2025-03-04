@@ -1,14 +1,16 @@
-# Pre-requisites
+# Prerequisites
 
 Before running the integration tests, ensure that the Momento API Key is available in your environment. If you don't
-have one, you can get it from the  [Momento Console](https://console.gomomento.com). Add the following environment variables:
+have one, you can get it from the  [Momento Console](https://console.gomomento.com). Add the following environment variables to a new file in
+the root of the repository named `.env`:
 
 ```bash
 export MOMENTO_API_KEY=<YOUR_API_KEY> # Momento API Key
-export TEST_REDIS=true # false if you would like to use momento
 export REDIS_HOST=<REDIS_HOST> # Redis host, default is "127.0.0.1"
 export REDIS_PORT=<REDIS_PORT> # Redis port, default is 6379
 export TEST_CACHE_NAME="test-cache" # Cache name
+export TEST_BACKEND="momento" # Backend to test, either "momento" or "redis". This env var is
+                              # set appropriately by the Makefile targets `test-redis` and `test-momento`.
 ```
 
 # Setup
@@ -69,8 +71,8 @@ Run the following commands in the terminal to install dependencies and execute t
 
 ```bash
 composer install
-composer test-momento # for momento
-composer test-redis # for redis
+make test-momento # for momento
+make test-redis # for redis
 ```
 
 **2. Using IntelliJ IDEA UI:**

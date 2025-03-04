@@ -14,6 +14,7 @@ class SetupIntegrationTest
     protected static Redis $client;
     protected static string $cacheName;
     protected static LoggerInterface $logger;
+    static string $testBackend;
 
     /**
      * Set up the client based on the environment. This will run once before all tests.
@@ -24,19 +25,17 @@ class SetupIntegrationTest
     {
         self::$cacheName = self::getTestCacheName();
         self::$logger = (new StderrLoggerFactory())->getLogger("integration-test");
-        if (self::isRedisBackedTest()) {
+        self::$testBackend = getenv('TEST_BACKEND');
+        if (self::$testBackend === "redis") {
             self::$logger->info("Running Redis backed tests");
             self::$client = self::setupRedisClient();
-        } else {
+        } elseif (self::$testBackend === "momento") {
             self::$logger->info("Running Momento backed tests");
             self::$client = self::setupMomentoClient();
+        } else {
+            self::$logger->error("Invalid TEST_BACKEND value. Please set TEST_BACKEND to 'redis' or 'momento'.");
+            throw new RuntimeException("Invalid TEST_BACKEND value. Please set TEST_BACKEND to 'redis' or 'momento'.");
         }
-    }
-
-    public static function isRedisBackedTest(): bool
-    {
-        $test_redis_env = getenv('TEST_REDIS');
-        return $test_redis_env === 'true' || $test_redis_env === '1';
     }
 
     /**
@@ -103,7 +102,7 @@ class SetupIntegrationTest
      */
     public static function tearDownIntegrationTests(): void
     {
-        if (self::isRedisBackedTest()) {
+        if (getenv('TEST_BACKEND') === "redis") {
             self::$client->flushDB();
             self::$client->close();
         } else {
