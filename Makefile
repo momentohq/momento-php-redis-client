@@ -14,11 +14,11 @@ lint:
 
 test-momento:
 	@echo "Running momento-backed tests..."
-	@composer test
+	@TEST_BACKEND="momento" composer test
 
 test-redis:
 	@echo "Running redis-backed tests..."
-	@TEST_REDIS=1 composer test
+	@TEST_BACKEND="redis" composer test
 
 test-redis-docker:
 	@REDIS_HOST=redis make test-redis
