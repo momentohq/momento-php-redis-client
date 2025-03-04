@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/momentohq/momento-php-redis-client/compare/v0.2.0...v0.3.0) (2025-03-04)
+
+
+### Features
+
+* union store ([#42](https://github.com/momentohq/momento-php-redis-client/issues/42)) ([adec801](https://github.com/momentohq/momento-php-redis-client/commit/adec80145b42b15be59f0f1d7c8cbeb698da442a))
+
 ## [0.2.0](https://github.com/momentohq/momento-php-redis-client/compare/v0.1.2...v0.2.0) (2024-11-20)
 
 
