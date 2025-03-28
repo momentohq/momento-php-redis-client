@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/momentohq/momento-php-redis-client/compare/v0.3.0...v0.3.1) (2025-03-28)
+
+
+### Miscellaneous
+
+* add error info ([#44](https://github.com/momentohq/momento-php-redis-client/issues/44)) ([a9333b9](https://github.com/momentohq/momento-php-redis-client/commit/a9333b92b5a76f72d62f2b5ed0853d8ebbcfc843))
+
 ## [0.3.0](https://github.com/momentohq/momento-php-redis-client/compare/v0.2.0...v0.3.0) (2025-03-04)
 
 
