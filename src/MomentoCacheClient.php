@@ -407,6 +407,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     }
 
 
+    /**
+     * @throws Exception
+     */
     public function exists(mixed $key, mixed ...$other_keys): Redis|int|bool
     {
         $keys = array_merge([$key], $other_keys);
@@ -456,8 +459,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 return false;
             } elseif ($result->asMiss()) {
                 return false;
-            } else {
+            } elseif ($result->asError()) {
                 return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            } else {
+                return false;
             }
         }
 
@@ -1260,6 +1265,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
+    /**
+     * @throws Exception
+     */
     public function pttl(string $key): Redis|int|false
     {
         $result = $this->client->itemGetTtl($this->cacheName, $key);
@@ -1583,6 +1591,8 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->set($this->cacheName, $key, $value, $ttl);
         if ($result->asSuccess()) {
             return 'OK';
+        } else if ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
         } else {
             return false;
         }
