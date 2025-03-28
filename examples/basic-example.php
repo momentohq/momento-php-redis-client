@@ -26,6 +26,13 @@ function createMomentoClient(): array
 {
     $authProvider = CredentialProvider::fromEnvironmentVariable("MOMENTO_API_KEY");
     $configuration = Laptop::latest(new StderrLoggerFactory());
+    $newGrpcConfig = $configuration->getTransportStrategy()
+        ->getGrpcConfig()
+        ->withDeadlineMilliseconds(5000)
+        ->withNumGrpcChannels(5);
+    $configuration = $configuration->withTransportStrategy(
+        $configuration->getTransportStrategy()->withGrpcConfig($newGrpcConfig)
+    );
     $client = new CacheClient($configuration, $authProvider, $GLOBALS['ITEM_DEFAULT_TTL_SECONDS']);
     $logger = $configuration->getLoggerFactory()->getLogger("ex:");
     return [$client, $logger];
