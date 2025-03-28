@@ -328,7 +328,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         foreach ($keys as $key) {
             $result = $this->client->delete($this->cacheName, $key);
             if ($result->asError()) {
-                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "delete");
             }
         }
         return count($keys);
@@ -407,6 +407,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     }
 
 
+    /**
+     * @throws Exception
+     */
     public function exists(mixed $key, mixed ...$other_keys): Redis|int|bool
     {
         $keys = array_merge([$key], $other_keys);
@@ -415,7 +418,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             $resp = $result->asSuccess()->exists();
             return array_sum($resp);
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "keysExist");
         } else {
             return false;
         }
@@ -443,7 +446,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             } elseif ($result->asMiss()) {
                 return false;
             } elseif ($result->asError()) {
-                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "decreaseTtl");
             } else {
                 return false;
             }
@@ -456,8 +459,10 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 return false;
             } elseif ($result->asMiss()) {
                 return false;
+            } elseif ($result->asError()) {
+                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "increaseTtl");
             } else {
-                return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                return false;
             }
         }
 
@@ -468,7 +473,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return false;
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "updateTtl");
         } else {
             return false;
         }
@@ -634,7 +639,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return false;
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "get");
         } else {
             return false;
         }
@@ -926,7 +931,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->value();
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "increment");
         } else {
             return false;
         }
@@ -1260,6 +1265,9 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         throw MomentoToPhpRedisExceptionMapper::createCommandNotImplementedException(__FUNCTION__);
     }
 
+    /**
+     * @throws Exception
+     */
     public function pttl(string $key): Redis|int|false
     {
         $result = $this->client->itemGetTtl($this->cacheName, $key);
@@ -1268,7 +1276,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asMiss()) {
             return -2;
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "itemGetTtl");
         }
     }
 
@@ -1560,7 +1568,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } elseif ($result->asNotStored()) {
                     return false;
                 } elseif ($result->asError()) {
-                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
                 } else {
                     return false;
                 }
@@ -1572,7 +1580,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
                 } elseif ($result->asNotStored()) {
                     return false;
                 } elseif ($result->asError()) {
-                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfPresent");
                 } else {
                     return false;
                 }
@@ -1583,6 +1591,8 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         $result = $this->client->set($this->cacheName, $key, $value, $ttl);
         if ($result->asSuccess()) {
             return 'OK';
+        } else if ($result->asError()) {
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "set");
         } else {
             return false;
         }
@@ -1631,7 +1641,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asNotStored()) {
             return false;
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
         }
     }
 
@@ -1799,7 +1809,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else if ($result->asMiss()) {
             return -2;
         } else {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "itemGetTtl");
         }
     }
 
@@ -1991,7 +2001,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return count($elements);
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetPutElements");
         } else {
             return false;
         }
@@ -2026,7 +2036,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return 0;
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetLengthByScore");
         } else {
             return false;
         }
@@ -2041,7 +2051,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->score();
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetIncrementScore");
         } else {
             return false;
         }
@@ -2147,7 +2157,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return count($members);
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetRemoveElements");
         } else {
             return false;
         }
@@ -2206,7 +2216,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return [];
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetFetchByRank");
         } else {
             return false;
         }
@@ -2271,7 +2281,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return [];
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetFetchByScore");
         } else {
             return false;
         }
@@ -2296,7 +2306,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } elseif ($result->asMiss()) {
             return false;
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetGetScore");
         } else {
             return false;
         }
@@ -2385,7 +2395,7 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         if ($result->asSuccess()) {
             return $result->asSuccess()->length();
         } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result);
+            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "sortedSetUnionStore");
         } else {
             return false;
         }

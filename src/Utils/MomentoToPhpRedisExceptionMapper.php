@@ -12,13 +12,14 @@ class MomentoToPhpRedisExceptionMapper
     /**
      * @throws RedisException
      */
-    public static function mapExceptionElseReturnFalse($error): bool|RedisException
+    public static function mapExceptionElseReturnFalse($error, $apiName): bool|RedisException
     {
         $sdkError = $error->asError()->innerException();
-        return match (get_class($sdkError)) {
-            TimeoutError::class => throw new RedisException("Timeout occurred: " . $sdkError->getMessage()),
-            default => false,
-        };
+        if (get_class($sdkError) === TimeoutError::class) {
+            $errorDetails = "$apiName returned error {$sdkError->getMessage()}\n";
+            throw new RedisException("Timeout occurred: " . $errorDetails);
+        }
+        return false;
     }
 
     public static function createCommandNotImplementedException(string $command): NotImplementedException
