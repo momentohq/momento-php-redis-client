@@ -24,7 +24,8 @@
   "require": {
     "vlucas/phpdotenv": "^5.6",
     "ext-redis": "*",
-    "momentohq/client-sdk-php": "^1.17"
+    "momentohq/client-sdk-php": "^1.17",
+    "ext-curl": "*"
   },
   "require-dev": {
     "orchestra/testbench": "^7.11",

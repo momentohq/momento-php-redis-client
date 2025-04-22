@@ -2,6 +2,7 @@
 
 namespace Momento\Cache;
 
+use CurlHandle;
 use Exception;
 use InvalidArgumentException;
 use Momento\Cache\Utils\MomentoToPhpRedisExceptionMapper;
@@ -14,12 +15,27 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 {
     protected CacheClient $client;
     protected string $cacheName;
+    protected CurlHandle $curlHandle;
+    private string $baseUrl;
+    private string $apiKey;
 
     public function __construct(CacheClient $client, string $cacheName)
     {
         parent::__construct();
         $this->client = $client;
         $this->cacheName = $cacheName;
+        $this->curlHandle = curl_init();
+        if ($this->curlHandle === false) {
+            throw new InvalidArgumentException("Failed to initialize cURL handle");
+        }
+        $this->apiKey = getenv("MOMENTO_API_KEY");
+        if ($this->apiKey === false) {
+            throw new InvalidArgumentException("MOMENTO_API_KEY environment variable not set");
+        }
+        curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($this->curlHandle, CURLOPT_RETURNTRANSFER, true);
+        $this->baseUrl = "https://api.cache.cell-alpha-dev.preprod.a.momentohq.com";
     }
 
     /**
@@ -633,13 +649,14 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 
     public function get(string $key): mixed
     {
-        $result = $this->client->get($this->cacheName, $key);
-        if ($result->asHit()) {
-            return $result->asHit()->valueString();
-        } elseif ($result->asMiss()) {
+        $url = $this->baseUrl . "/cache/" . $this->cacheName . "?key=" . $key . "&token=" . $this->apiKey;
+        curl_setopt($this->curlHandle, CURLOPT_URL, $url);
+        $content = curl_exec($this->curlHandle);
+        $header = $this->getHeaderInfo($this->curlHandle);
+        if ($header['http_code'] === 200) {
+            return $content;
+        } elseif ($header['http_code'] === 404) {
             return false;
-        } elseif ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "get");
         } else {
             return false;
         }
@@ -1562,40 +1579,55 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 
             // Handle NX option: Set if the key does not exist
             if (in_array('nx', $options, true)) {
-                $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
-                if ($result->asStored()) {
-                    return "OK";
-                } elseif ($result->asNotStored()) {
-                    return false;
-                } elseif ($result->asError()) {
-                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
-                } else {
-                    return false;
-                }
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'nx');
+//                $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
+//                if ($result->asStored()) {
+//                    return "OK";
+//                } elseif ($result->asNotStored()) {
+//                    return false;
+//                } elseif ($result->asError()) {
+//                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
+//                } else {
+//                    return false;
+//                }
             } elseif (in_array('xx', $options, true)) {
                 // Handle XX option: Set only if the key already exists
-                $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
-                if ($result->asStored()) {
-                    return "OK";
-                } elseif ($result->asNotStored()) {
-                    return false;
-                } elseif ($result->asError()) {
-                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfPresent");
-                } else {
-                    return false;
-                }
+                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'xx');
+//                $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
+//                if ($result->asStored()) {
+//                    return "OK";
+//                } elseif ($result->asNotStored()) {
+//                    return false;
+//                } elseif ($result->asError()) {
+//                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfPresent");
+//                } else {
+//                    return false;
+//                }
             }
         }
 
-        // Execute the set command on the cache with the provided TTL
-        $result = $this->client->set($this->cacheName, $key, $value, $ttl);
-        if ($result->asSuccess()) {
+        $url = $this->baseUrl . "/cache/" . $this->cacheName . "?key=" . $key . "&value=" .
+            $value . "&ttl_seconds=" . $ttl . "&token=" . $this->apiKey;
+        curl_setopt($this->curlHandle, CURLOPT_URL, $url);
+        curl_setopt($this->curlHandle, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($this->curlHandle, CURLOPT_POSTFIELDS, $value);
+        curl_exec($this->curlHandle);
+        $header = $this->getHeaderInfo($this->curlHandle);
+        if ($header['http_code'] === 204) {
             return 'OK';
-        } else if ($result->asError()) {
-            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "set");
         } else {
             return false;
         }
+
+        // Execute the set command on the cache with the provided TTL
+//        $result = $this->client->set($this->cacheName, $key, $value, $ttl);
+//        if ($result->asSuccess()) {
+//            return 'OK';
+//        } else if ($result->asError()) {
+//            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "set");
+//        } else {
+//            return false;
+//        }
     }
 
     /**
@@ -2429,4 +2461,15 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 
         return $elements;
     }
+
+    private function getHeaderInfo(CurlHandle $ch): array {
+        $err     = curl_errno($ch);
+        $errmsg  = curl_error($ch);
+        $header  = curl_getinfo($ch);
+
+        $header['errno']   = $err;
+        $header['errmsg']  = $errmsg;
+        return $header;
+    }
+
 }
