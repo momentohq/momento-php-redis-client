@@ -1579,30 +1579,28 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 
             // Handle NX option: Set if the key does not exist
             if (in_array('nx', $options, true)) {
-                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'nx');
-//                $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
-//                if ($result->asStored()) {
-//                    return "OK";
-//                } elseif ($result->asNotStored()) {
-//                    return false;
-//                } elseif ($result->asError()) {
-//                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
-//                } else {
-//                    return false;
-//                }
+                $result = $this->client->setIfAbsent($this->cacheName, $key, $value, $ttl);
+                if ($result->asStored()) {
+                    return "OK";
+                } elseif ($result->asNotStored()) {
+                    return false;
+                } elseif ($result->asError()) {
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfAbsent");
+                } else {
+                    return false;
+                }
             } elseif (in_array('xx', $options, true)) {
                 // Handle XX option: Set only if the key already exists
-                throw MomentoToPhpRedisExceptionMapper::createArgumentNotSupportedException(__FUNCTION__, 'xx');
-//                $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
-//                if ($result->asStored()) {
-//                    return "OK";
-//                } elseif ($result->asNotStored()) {
-//                    return false;
-//                } elseif ($result->asError()) {
-//                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfPresent");
-//                } else {
-//                    return false;
-//                }
+                $result = $this->client->setIfPresent($this->cacheName, $key, $value, $ttl);
+                if ($result->asStored()) {
+                    return "OK";
+                } elseif ($result->asNotStored()) {
+                    return false;
+                } elseif ($result->asError()) {
+                    return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "setIfPresent");
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -1618,16 +1616,6 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
         } else {
             return false;
         }
-
-        // Execute the set command on the cache with the provided TTL
-//        $result = $this->client->set($this->cacheName, $key, $value, $ttl);
-//        if ($result->asSuccess()) {
-//            return 'OK';
-//        } else if ($result->asError()) {
-//            return MomentoToPhpRedisExceptionMapper::mapExceptionElseReturnFalse($result, "set");
-//        } else {
-//            return false;
-//        }
     }
 
     /**
