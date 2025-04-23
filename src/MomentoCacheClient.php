@@ -15,26 +15,32 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
 {
     protected CacheClient $client;
     protected string $cacheName;
-    protected CurlHandle $curlHandle;
+    private CurlHandle $getCurlHandle;
+    private CurlHandle $setCurlHandle;
     private string $baseUrl;
     private string $apiKey;
 
     public function __construct(CacheClient $client, string $cacheName)
     {
         parent::__construct();
-        $this->client = $client;
-        $this->cacheName = $cacheName;
-        $this->curlHandle = curl_init();
-        if ($this->curlHandle === false) {
-            throw new InvalidArgumentException("Failed to initialize cURL handle");
-        }
         $this->apiKey = getenv("MOMENTO_API_KEY");
         if ($this->apiKey === false) {
             throw new InvalidArgumentException("MOMENTO_API_KEY environment variable not set");
         }
-        curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($this->curlHandle, CURLOPT_RETURNTRANSFER, true);
+        $this->client = $client;
+        $this->cacheName = $cacheName;
+        $this->getCurlHandle = curl_init();
+        if ($this->getCurlHandle === false) {
+            throw new InvalidArgumentException("Failed to initialize cURL handle");
+        }
+        $this->setCurlHandle = curl_init();
+        curl_setopt($this->getCurlHandle, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($this->getCurlHandle, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($this->getCurlHandle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($this->setCurlHandle, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($this->setCurlHandle, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($this->setCurlHandle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($this->setCurlHandle, CURLOPT_CUSTOMREQUEST, "PUT");
         $this->baseUrl = "https://api.cache.cell-alpha-dev.preprod.a.momentohq.com";
     }
 
@@ -650,14 +656,15 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
     public function get(string $key): mixed
     {
         $url = $this->baseUrl . "/cache/" . $this->cacheName . "?key=" . $key . "&token=" . $this->apiKey;
-        curl_setopt($this->curlHandle, CURLOPT_URL, $url);
-        $content = curl_exec($this->curlHandle);
-        $header = $this->getHeaderInfo($this->curlHandle);
+        curl_setopt($this->getCurlHandle, CURLOPT_URL, $url);
+        $content = curl_exec($this->getCurlHandle);
+        $header = $this->getHeaderInfo($this->getCurlHandle);
         if ($header['http_code'] === 200) {
             return $content;
         } elseif ($header['http_code'] === 404) {
             return false;
         } else {
+            print("Get error: " . $header['http_code'] . "\n" . print_r($content, true) . "\n");
             return false;
         }
     }
@@ -1604,16 +1611,17 @@ class MomentoCacheClient extends Redis implements IMomentoRedisClient
             }
         }
 
+        $ttl = $ttl || 60;
         $url = $this->baseUrl . "/cache/" . $this->cacheName . "?key=" . $key . "&value=" .
             $value . "&ttl_seconds=" . $ttl . "&token=" . $this->apiKey;
-        curl_setopt($this->curlHandle, CURLOPT_URL, $url);
-        curl_setopt($this->curlHandle, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($this->curlHandle, CURLOPT_POSTFIELDS, $value);
-        curl_exec($this->curlHandle);
-        $header = $this->getHeaderInfo($this->curlHandle);
+        curl_setopt($this->setCurlHandle, CURLOPT_URL, $url);
+        curl_setopt($this->setCurlHandle, CURLOPT_POSTFIELDS, $value);
+        $response = curl_exec($this->setCurlHandle);
+        $header = $this->getHeaderInfo($this->setCurlHandle);
         if ($header['http_code'] === 204) {
             return 'OK';
         } else {
+            print("Set error: " . $header['http_code'] . "\n" . print_r($response, true) . "\n");
             return false;
         }
     }
