@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/momentohq/momento-php-redis-client/compare/v0.3.1...v0.3.2) (2026-08-13)
+
+
+### Miscellaneous
+
+* retire the machine-user release token ([#46](https://github.com/momentohq/momento-php-redis-client/issues/46)) ([740d35f](https://github.com/momentohq/momento-php-redis-client/commit/740d35f299c99b35c06938762397c349f4d6b2fd))
+
 ## [0.3.1](https://github.com/momentohq/momento-php-redis-client/compare/v0.3.0...v0.3.1) (2025-03-28)
 
 
